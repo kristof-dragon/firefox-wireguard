@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export CLANG_MODULE_CACHE_PATH="$PWD/.build/module-cache"
+export SWIFTPM_MODULECACHE_OVERRIDE="$CLANG_MODULE_CACHE_PATH"
+swift test --package-path app --scratch-path .build/native --disable-sandbox --build-system native
+node --test extension/tests/*.test.js
+python3 -m py_compile scripts/fetch_backend.py scripts/package_extension.py
+plutil -lint packaging/Info.plist

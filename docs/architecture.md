@@ -1,77 +1,47 @@
 # Architecture
 
-This document describes a proposed architecture, not an implemented or verified system.
+This describes the implemented 0.1.0 development version. Validation scope is recorded separately in [validation.md](validation.md).
 
-## Components
+## Native app and secrets
 
-### macOS menu-bar application
+The SwiftUI app uses `MenuBarExtra` and runs as an accessory without a Dock icon. It owns profile management, Keychain access, backend lifecycle, and native-host registration. It requires no privileged access and configures no OS network interfaces, routes, or DNS.
 
-Prefer a native Swift/SwiftUI application. Confirm the deployment target before selecting the exact menu-bar API. Package it as a menu-bar accessory application without a Dock icon.
+Profile IDs and names are in a mode-0600 JSON index inside a mode-0700 per-user application-support directory. Complete normalized configurations are in macOS Keychain, accessible when the device is unlocked. Editing reveals keys in the native editor. Corrupt metadata is reported rather than overwritten. Configuration contents never reach Firefox or routine logs.
 
-The app owns:
+A strict parser supports one interface and peer, an IPv4 full tunnel, IP-literal DNS, and optional paired IPv6 address/default route. It rejects unknown fields, shell hooks, backend sections, and environment substitutions. Keepalive is normalized to 25 seconds; a fixed client listening port is omitted. See [installation.md](installation.md) for compatibility.
 
-- Profile metadata and configuration validation.
-- macOS Keychain references for private and preshared keys.
-- The single active tunnel and its lifecycle.
-- The userspace backend process and loopback proxy endpoint.
-- Connection status and health information shared with Firefox.
-- Installation and registration of the Firefox native messaging bridge.
+## Control channel
 
-Store mutable application data in per-user application storage. Do not put runtime data inside the source checkout. Do not invoke arbitrary WireGuard PostUp, PostDown, PreUp, or PreDown shell hooks from imported profiles. Unsupported fields must produce an explicit validation result.
+The extension ID is `firefox-wireguard@local.invalid`. Firefox starts `org.firefoxwireguard.bridge`, whose native-host manifest allows only that ID. The helper also checks Firefox's origin argument.
 
-### Firefox WebExtension
+The bridge forwards bounded, length-prefixed JSON to a mode-0600 Unix socket in the private application directory. Both ends validate the peer UID. An advisory lock prevents duplicate app ownership. These controls isolate other users, not hostile software already running as the same user.
 
-The extension provides selection and connection controls and applies browser-level proxy and privacy settings. It obtains profile summaries through native messaging; it does not import or store WireGuard keys.
+Protocol version 1 allows only `status`, `connect`, and `disconnect`. Commands carry a client UUID; connect adds a profile UUID. Replies contain profile summaries, state, and a loopback proxy port when appropriate. No arbitrary commands, paths, configurations, or secret exports are supported. Frames are limited to 64 KiB.
 
-Record the desired protected state separately from observed connection health. Inspect whether other extensions or browser policy control the relevant settings. Refuse to claim protection if the required settings cannot be applied.
+The bridge can launch its containing app. It retries socket connection establishment, never a mutating request whose response may have been lost. A timeout advises checking the app and any Keychain prompt. The extension reopens failed native ports on later requests.
 
-The extension must preserve and correctly restore user settings, account for private-window permission, and handle existing network connections when enabling protection or changing profiles. Manifest version and minimum browser version remain implementation decisions.
+## Backend lifecycle
 
-### Native messaging bridge
+The build downloads pinned wireproxy 1.1.3 for the host architecture and verifies archive and licence SHA-256 digests. Configuration goes through stdin, absent from command arguments and temporary files. The backend and its licence are packaged in the app.
 
-Use Firefox native messaging to communicate with a narrowly scoped native executable registered for the extension's exact ID. The bridge is a control channel; browsing data does not flow through native messaging.
+A supervisor watches its parent app and terminates wireproxy when the app exits. SOCKS5 and metrics bind separately allocated IPv4 loopback ports. No direct-routing backend option is admitted.
 
-The bridge forwards allowlisted, versioned commands to the app through an authenticated local channel. Evaluate XPC or a per-user Unix socket with restricted permissions and peer validation. Avoid a general-purpose unauthenticated HTTP control server.
+Health is polled every two seconds. A handshake less than 180 seconds old permits `connected`; a listening port alone does not. Startup without a handshake becomes blocked after 30 seconds; missing health responses become blocked after five seconds. These are detection intervals, not instant network-loss detection. A handshake proves peer contact, not DNS or Internet reachability.
 
-Planned operations: list profiles, read state, connect using a profile ID, disconnect, and subscribe to state changes. Do not offer arbitrary command execution, arbitrary file reads, or secret export to the extension.
+One Firefox client UUID owns the tunnel. Status requests renew a 12-second lease; lease loss stops the backend. Other clients cannot take over or stop it. App quit or **Stop Tunnel** leaves a protected extension blocked. Login startup is not implemented.
 
-### Userspace WireGuard backend
+The SOCKS endpoint is unauthenticated. Other local processes can opt into using it. This product selects Firefox's route rather than enforcing exclusive Firefox use.
 
-Evaluate wireproxy as the initial backend. It establishes a separate WireGuard session and exposes a proxy on a loopback address. It does not attach to an existing tunnel managed by the official Mac app.
+## Extension lifecycle
 
-Use a dedicated peer identity when the browser connection may run alongside another WireGuard client. Validate configuration compatibility and the remote server's intended routing.
+The Manifest V2 extension has a persistent background page. Synchronous request and proxy handlers register before storage is read. Desired protection and selected profile persist separately from observed health. A new installation starts idle; saved protected intent starts blocked.
 
-Keep the proxy loopback-only. Loopback binding does not itself prevent another local application from using the proxy; evaluate per-session authentication and available Firefox support if that isolation is required. The routing scope means the product configures Firefox to use the proxy; it is not automatically a process-level firewall.
+Connect persists intent, closes the request guard, verifies private-window permission and control of settings, disables WebRTC/network prediction, and installs a dead proxy. It then asks the app to connect. A recent handshake for the selected profile and verified settings enable its SOCKS5 port with proxy DNS. Proxy results end with `null` to prohibit direct failover.
 
-Pin and verify the selected backend version. Check available macOS builds, relevant licences, executable verification, update behaviour, DNS handling, and routing semantics before bundling it. A running backend process or listening socket is not sufficient evidence of a working tunnel.
+Localhost names and loopback IPs bypass the tunnel. Other private addresses follow the proxy. An unsupported IPv6 destination does not get a direct fallback.
 
-## Data and secret handling
+Transport loss, conflicting settings, mismatched profiles, missing readiness, and startup failures close the guard. Stale transport responses cannot reopen it. Polls may recover a still-running healthy tunnel; a stopped/idle app requires reconnect.
 
-- Profile summaries contain opaque IDs, display names, and non-secret status only.
-- Private and preshared keys are stored through macOS Keychain.
-- Keep tunnel endpoints, addresses, and other profile metadata out of routine logs.
-- If the backend requires a temporary plaintext configuration, minimize its lifetime and restrict file and directory permissions. Keychain storage does not eliminate this runtime exposure.
-- Do not place secrets in process arguments, exception messages, browser storage, telemetry, build artifacts, or repository files.
-- Log only what is needed to diagnose lifecycle failures; any diagnostic export must be deliberate and sanitized.
+**Disconnect** releases only settings controlled by this extension, restoring the underlying Firefox settings, even with the companion unavailable. Disabling/removing the extension also removes its enforcement; it is not an OS-level kill switch.
 
-## Connection lifecycle
-
-The initial design needs explicit idle, preparing, connecting, connected, blocked, and disconnecting states. The desired protection state is independent of these observed states.
-
-Before reporting Connected:
-
-1. Verify that the extension can control the necessary browser settings.
-2. Establish a browser state that blocks direct external browsing during connection setup.
-3. Start or select the configured backend and verify readiness.
-4. Apply the tunnel's proxy and privacy settings.
-5. Confirm the expected network path using an appropriate health check.
-
-Unexpected failures while protection is desired enter Blocked. Explicit disconnect restores the user's prior browser configuration. Profile switching, process crashes, stale messages, app termination, and browser restart need defined transitions and testing.
-
-Native messaging connections may end with Firefox or the extension. Do not implicitly couple backend lifetime or the app's protected state to the bridge process without testing the resulting failure behaviour.
-
-## Browser coverage
-
-Test DNS and DNS-over-HTTPS, IPv4 and IPv6, WebRTC, HTTP protocol fallback, downloads, WebSockets, service workers, background requests, private windows, and browser-created connections. Validate both tunnel health and absence of unintended direct traffic.
-
-An extension can lose control if removed, disabled, or overridden. If the product later requires a stronger containment guarantee, that is a separate operating-system enforcement design with its own permissions and validation requirements.
+Proxy changes do not guarantee closure of existing connections. Close existing tabs and downloads before connecting. Full startup, browser-internal, DNS-over-HTTPS, HTTP/3, IPv6, and socket-lifecycle coverage remain validation work.

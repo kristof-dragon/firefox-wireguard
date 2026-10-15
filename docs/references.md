@@ -4,7 +4,7 @@ These links are design inputs. Their code, binaries, and instructions are not au
 
 ## Userspace WireGuard
 
-- [wireproxy](https://github.com/windtf/wireproxy): candidate userspace WireGuard backend exposing a local proxy.
+- [wireproxy](https://github.com/windtf/wireproxy): initial userspace WireGuard backend, pinned to version 1.1.3.
 - [WireGuard](https://www.wireguard.com/): protocol and configuration background.
 - [Wireguard-Browser-Extension prototype](https://github.com/Nope-im-not-pro/Wireguard-Browser-Extension): a related Firefox/native-host design considered during exploration.
 
@@ -16,7 +16,7 @@ No implementation has been copied from the prototype. Its public availability is
 - [Network privacy controls](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/privacy/network)
 - [Native messaging](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging)
 
-Browser-wide proxy settings and native messaging are the proposed integration points. Verify current permission requirements, API behaviour, and browser-version support before implementation.
+Browser-wide proxy settings and native messaging are the implemented integration points. The extension also applies per-request proxy decisions and blocking. Permissions and behaviour were exercised in Firefox 157; earlier declared versions still need testing.
 
 ## Private extension installation
 

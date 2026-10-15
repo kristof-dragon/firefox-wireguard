@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Firefox WireGuard</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><img src="icon.svg" alt=""><div><h1>Firefox WireGuard</h1><span class="subtitle">Browser connection</span></div><button id="refresh" class="icon" title="Refresh profiles from the companion app" aria-label="Refresh">↻</button></header>
+  <main>
+    <div class="status"><span id="dot" class="dot"></span><strong id="status">Starting…</strong></div>
+    <label for="profile">Tunnel profile</label>
+    <select id="profile"><option value="">Loading profiles…</option></select>
+    <p id="error" role="alert" hidden></p>
+    <div class="actions"><button id="connect" class="primary" disabled>Connect</button><button id="disconnect" hidden>Disconnect</button></div>
+  </main>
+  <footer><span>Preview 0.1</span><span title="Only new proxy-compatible requests are covered. Close existing tabs and downloads before connecting. WebRTC calls are disabled while enabled. Localhost remains local. Disabling or removing the extension ends protection." tabindex="0">Connection details ⓘ</span></footer>
+  <script src="popup.js"></script>
+</body>
+</html>

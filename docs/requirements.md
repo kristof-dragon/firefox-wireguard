@@ -30,7 +30,7 @@ A Firefox proxy setting is not a claim that every packet from every Firefox-rela
 
 ### Split-tunnel profiles
 
-The behaviour for destinations outside a profile's routes is not yet selected. Before implementation, choose and expose one explicit policy: direct access or blocking. Never infer that policy from a failed proxy connection.
+Version 0.1 rejects split-tunnel profiles. Before adding support, choose and expose one explicit policy for destinations outside the routes: direct access or blocking. Never infer that policy from a failed proxy connection.
 
 Do not assume standard WireGuard configuration fields automatically enforce browser-level split routing. The proxy and userspace backend need tested, compatible routing behaviour.
 
@@ -64,12 +64,14 @@ Changing Firefox-wide proxy settings may require the extension to be allowed in 
 - A hosted account service or remote configuration control plane.
 - Docker or a Linux virtual machine as a required runtime.
 
-## Decisions still required
+## Version 0.1 decisions
 
-- Minimum supported macOS and Firefox versions, and initial CPU architectures.
-- Out-of-route policy for split-tunnel profiles.
-- WebRTC policy and supported browser calling behaviour.
-- Multiple Firefox profiles and concurrent client ownership.
-- App launch, quit, login startup, and protection persistence behaviour.
-- Backend version, supply-chain verification, and redistribution approach.
-- Public project licence and optional update hosting.
+- Declared minimum macOS 13 and Firefox 128; tested on Apple Silicon/macOS 27/Firefox 157. Intel and older versions remain unverified.
+- Full-tunnel IPv4 is required. Optional IPv6 needs both an interface address and default route; its live path is unverified. Split profiles are rejected.
+- WebRTC is disabled while protected, so WebRTC calls will not work in that state.
+- One Firefox profile owns the tunnel, with a renewable 12-second lease. Other profiles cannot take over.
+- The bridge launches the app on demand. App quit/stop leaves covered Firefox requests blocked. Login startup is deferred.
+- wireproxy 1.1.3 archives and licence are checksum-pinned. Local app builds use ad-hoc signing; the extension is unsigned and temporarily loaded.
+- A recent handshake is the readiness signal, not proof of Internet reachability or complete containment.
+
+The public project licence, signed extension distribution, binary redistribution review, split-routing policy, and update hosting remain open. These requirements describe intended protection scope; [validation.md](validation.md) distinguishes tested checks from unverified release gates.
