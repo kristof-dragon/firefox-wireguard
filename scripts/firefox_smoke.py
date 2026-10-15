@@ -18,18 +18,40 @@ import time
 import urllib.error
 import urllib.request
 import uuid
+import zipfile
 
 parser = argparse.ArgumentParser()
 parser.add_argument("geckodriver", type=Path)
 parser.add_argument("--firefox", default="/Applications/Firefox.app/Contents/MacOS/firefox")
 parser.add_argument("--launch-services", action="store_true", help="Launch via macOS LaunchServices (needed for Firefox on macOS 27)")
+parser.add_argument("--fixture-native", action="store_true", help="Use a separate synthetic native host; leave the real app and integration untouched")
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 helper = root / "dist/Firefox WireGuard.app/Contents/MacOS/firefox-wireguard-bridge"
-extension = root / "dist/firefox-wireguard-0.1.0-unsigned.xpi"
+version = json.loads((root / "extension/manifest.json").read_text())["version"]
+extension = root / f"dist/firefox-wireguard-{version}-unsigned.xpi"
 extension_id = "firefox-wireguard@local.invalid"
 extension_uuid = str(uuid.uuid4())
 host = "org.firefoxwireguard.bridge"
+if args.fixture_native:
+    suffix = uuid.uuid4().hex
+    extension_id = f"fixture-{suffix}@example.invalid"
+    host = f"org.firefoxwireguard.fixture_{suffix}"
+    helper = root / ".build" / f"native-fixture-{suffix}"
+    helper.write_bytes((root / "scripts/fixtures/native_host.py").read_bytes())
+    helper.chmod(0o700)
+    fixture_extension = root / ".build" / f"fixture-{suffix}.xpi"
+    with zipfile.ZipFile(extension) as source, zipfile.ZipFile(fixture_extension, "w") as target:
+        for name in source.namelist():
+            data = source.read(name)
+            if name == "manifest.json":
+                value = json.loads(data)
+                value["browser_specific_settings"]["gecko"]["id"] = extension_id
+                data = json.dumps(value).encode()
+            elif name == "controller.js":
+                data = data.replace(b"org.firefoxwireguard.bridge", host.encode())
+            target.writestr(name, data)
+    extension = fixture_extension
 manifest = Path.home() / f"Library/Application Support/Mozilla/NativeMessagingHosts/{host}.json"
 prior = manifest.read_bytes() if manifest.exists() else None
 prior_mode = manifest.stat().st_mode & 0o777 if manifest.exists() else None
@@ -155,7 +177,7 @@ try:
     assert execute("return document.querySelector('h1').textContent") == "Firefox WireGuard"
     state = message("refresh")
     assert state and state["ready"] and not state["desired"] and not state["error"], state
-    print("PASS: actual Firefox extension loaded and reached the real companion through native messaging.", flush=True)
+    print("PASS: actual Firefox extension reached the isolated fixture host." if args.fixture_native else "PASS: actual Firefox extension reached the real companion through native messaging.", flush=True)
     result = execute("const done=arguments[arguments.length-1]; browser.extension.isAllowedIncognitoAccess().then(done);", asynchronous=True)
     assert result is True, "Disposable profile did not grant private-window access"
 
@@ -175,13 +197,31 @@ try:
     assert network[0]["value"]["proxyDNS"] is True
     assert network[1]["value"] is False
     print("PASS: failed connection blocks external requests, preserves localhost, uses proxy DNS, and disables WebRTC.", flush=True)
+    state = message("killSwitch", enabled=False)
+    assert state["directFallback"] and not state["killSwitch"], state
+    assert fetch(remote_url)["ok"] is True
+    state = message("killSwitch", enabled=True)
+    assert not state["directFallback"] and state["killSwitch"], state
+    assert fetch(remote_url)["ok"] is False
+    assert fetch(local_url)["ok"] is True
+    print("PASS: kill switch off allows ordinary browsing; turning it on blocks again and preserves localhost.", flush=True)
     state = message("disconnect")
     assert state["desired"] is False
     assert fetch(remote_url)["ok"] is True
     print("PASS: explicit Disconnect restores ordinary browsing in the disposable Firefox profile.", flush=True)
     # A screenshot is a generated local artifact; it is never committed.
     import base64
-    image = api(f"/session/{session}/screenshot")
+    if args.fixture_native:
+        state = message("connect", profileID="11111111-1111-4111-8111-111111111111")
+        assert state["details"]["publicIP"] == "203.0.113.8"
+        execute("render(arguments[0]);", [state])
+        visible = execute("return ['public-ip','downloaded','uploaded','dns','client-ip'].map(id => document.getElementById(id).textContent);")
+        assert visible == ["🇬🇧 203.0.113.8", "123.5 MB", "8.8 MB", "192.0.2.1", "192.0.2.2, 2001:db8::2"], visible
+        assert execute("return document.getElementById('kill-switch').checked") is True
+        print("PASS: popup displays exit flag/IP, session counters, DNS, and IPv4/IPv6 client addresses from synthetic data.", flush=True)
+    element = api(f"/session/{session}/element", {"using": "css selector", "value": "body"})
+    element_id = element["element-6066-11e4-a52e-4f735466cecf"]
+    image = api(f"/session/{session}/element/{element_id}/screenshot")
     (root / "dist/firefox-extension-preview.png").write_bytes(base64.b64decode(image))
 finally:
     if session:
@@ -221,5 +261,8 @@ finally:
     else:
         manifest.write_bytes(prior)
         os.chmod(manifest, prior_mode)
+    if args.fixture_native:
+        helper.unlink(missing_ok=True)
+        extension.unlink(missing_ok=True)
     httpd.shutdown()
     driver_log.close()

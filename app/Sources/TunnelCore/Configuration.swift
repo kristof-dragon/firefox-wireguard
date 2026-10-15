@@ -12,6 +12,8 @@ public struct UserError: LocalizedError, Equatable {
 public struct TunnelConfiguration {
     public let canonical: String
     public let supportsIPv6: Bool
+    public let clientIPs: [String]
+    public let dnsServers: [String]
 
     public init(_ text: String) throws {
         guard text.utf8.count <= 32_768, !text.contains("\0") else {
@@ -99,6 +101,8 @@ public struct TunnelConfiguration {
         output += "PersistentKeepalive = 25\n"
         canonical = output
         supportsIPv6 = has6
+        clientIPs = addresses.map { String($0.split(separator: "/")[0]) }
+        dnsServers = dns
     }
 
     public func backendConfig(proxyPort: UInt16, healthPort: UInt16) -> String {

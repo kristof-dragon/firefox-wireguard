@@ -4,6 +4,15 @@ import Darwin
 @testable import MenuBarApp
 @testable import TunnelCore
 
+private actor ControlledExitLookup: ExitIPLookingUp {
+    var requests: [CheckedContinuation<PublicExit, Error>] = []
+    func lookup(proxyPort: UInt16) async throws -> PublicExit {
+        try await withCheckedThrowingContinuation { requests.append($0) }
+    }
+    func count() -> Int { requests.count }
+    func complete(_ index: Int, result: Result<PublicExit, Error>) { requests[index].resume(with: result) }
+}
+
 final class EngineTests: XCTestCase {
     @MainActor func testManagerWaitsForRealHandshakeAndOwnsOneClient() async throws {
         guard ProcessInfo.processInfo.environment["FWG_TEST_BACKEND"] == "1" else {
@@ -53,7 +62,8 @@ final class EngineTests: XCTestCase {
         Endpoint = 127.0.0.1:\(port)
         AllowedIPs = 0.0.0.0/0
         """)
-        let manager = TunnelManager(helperURL: helper), owner = UUID().uuidString, profile = Profile(name: "Local engine fixture")
+        let lookup = ControlledExitLookup()
+        let manager = TunnelManager(helperURL: helper, exitLookup: lookup), owner = UUID().uuidString, profile = Profile(name: "Local engine fixture")
         defer { manager.stop(reason: nil) }
         try manager.connect(profile: profile, configuration: config, client: owner)
         XCTAssertEqual(manager.state.phase, "connecting")
@@ -61,14 +71,57 @@ final class EngineTests: XCTestCase {
         XCTAssertThrowsError(try manager.connect(profile: profile, configuration: config, client: UUID().uuidString))
         for _ in 0..<30 {
             manager.renew(owner)
-            if manager.state.phase == "connected" { break }
+            if manager.state.phase == "connected", await lookup.count() == 1 { break }
             try await Task.sleep(nanoseconds: 200_000_000)
         }
         XCTAssertEqual(manager.state.phase, "connected", manager.state.error ?? "No handshake observed")
         XCTAssertNotNil(manager.state.handshakeAge)
         XCTAssertNotNil(manager.state.proxyPort)
+        XCTAssertEqual(manager.state.details?.clientIPs, ["192.0.2.2"])
+        XCTAssertEqual(manager.state.details?.dnsServers, ["192.0.2.1"])
+        XCTAssertNotNil(manager.state.details?.downloadedBytes)
+        XCTAssertNotNil(manager.state.details?.uploadedBytes)
+        let firstConnection = manager.state.details?.connectionID
+        let exit = try PublicExit(data: Data(#"{"success":true,"ip":"203.0.113.8","country_code":"GB"}"#.utf8))
+        // Hold the old lookup across reconnect; its late result must not appear
+        // on the new connection, even when a provider ignores cancellation.
+        try manager.connect(profile: profile, configuration: config, client: owner)
+        XCTAssertNotEqual(manager.state.details?.connectionID, firstConnection)
+        XCTAssertNil(manager.state.details?.downloadedBytes)
+        XCTAssertNil(manager.state.details?.publicIP)
+        guard await lookup.count() == 1 else { return XCTFail("First lookup did not start") }
+        await lookup.complete(0, result: .success(exit))
+        for _ in 0..<30 {
+            manager.renew(owner)
+            if await lookup.count() == 2 { break }
+            try await Task.sleep(nanoseconds: 200_000_000)
+        }
+        XCTAssertNil(manager.state.details?.publicIP)
+        guard await lookup.count() == 2 else { return XCTFail("Second lookup did not start") }
+        await lookup.complete(1, result: .failure(UserError("Fixture provider unavailable")))
+        for _ in 0..<10 {
+            if manager.state.details?.exitStatus == "unavailable" { break }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertEqual(manager.state.phase, "connected")
+        XCTAssertEqual(manager.state.details?.exitStatus, "unavailable")
+        try manager.connect(profile: profile, configuration: config, client: owner)
+        for _ in 0..<30 {
+            manager.renew(owner)
+            if await lookup.count() == 3 { break }
+            try await Task.sleep(nanoseconds: 200_000_000)
+        }
+        guard await lookup.count() == 3 else { return XCTFail("Third lookup did not start") }
+        await lookup.complete(2, result: .success(exit))
+        for _ in 0..<10 {
+            if manager.state.details?.exitStatus == "ready" { break }
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertEqual(manager.state.details?.publicIP, "203.0.113.8")
+        XCTAssertEqual(manager.state.details?.countryFlag, "🇬🇧")
         manager.stop(reason: "Fixture stopped")
         XCTAssertEqual(manager.state.phase, "blocked")
         XCTAssertNil(manager.state.proxyPort)
+        XCTAssertNil(manager.state.details)
     }
 }

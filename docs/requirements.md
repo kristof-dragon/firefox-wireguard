@@ -38,7 +38,7 @@ Do not assume standard WireGuard configuration fields automatically enforce brow
 
 - Distinguish desired protection state from backend health.
 - Establish the protected browser state before sending traffic through a newly selected connection.
-- Unexpected loss of the app, bridge, backend, network, or tunnel must not intentionally restore direct browsing.
+- The Firefox kill switch defaults to on and persists per browser profile. With it on, unexpected app, bridge, backend, network, or tunnel loss must not intentionally restore direct browsing. Explicitly switching it off permits normal browsing after failure detection, with a direct-browsing warning.
 - A failed health check must not be shown as a successful connection merely because a process or local port exists.
 - An explicit Disconnect action ends protection and restores the Firefox settings previously controlled by the product.
 - Browser startup, restart, extension update, and crash behaviour are release gates. Any unavoidable gaps must be documented.
@@ -52,9 +52,11 @@ Profile list, active profile, connection state, import/edit/remove controls, and
 
 ### Firefox extension
 
-A compact profile selector, Connect/Disconnect control, status, and an actionable error when the companion app is unavailable. Keep implementation details out of the normal user flow.
+A compact profile selector, Connect/Disconnect control, persistent Kill switch toggle, status, and an actionable error when the companion app is unavailable. Keep implementation details out of the normal user flow.
 
 Changing Firefox-wide proxy settings may require the extension to be allowed in private windows. Detect this prerequisite and explain it before claiming protection is active.
+
+Both interfaces show public exit IP with an approximate country flag, downloaded/uploaded byte totals for the current connection, configured tunnel DNS IPs, and client WireGuard IPs. Public-IP checks must use the tunnel and never bypass it when unavailable. Details must not persist in logs, files, or browser storage. Reset totals on a new connection and discard stale lookup responses.
 
 ## Initial exclusions
 
@@ -70,7 +72,7 @@ Changing Firefox-wide proxy settings may require the extension to be allowed in 
 - Full-tunnel IPv4 is required. Optional IPv6 needs both an interface address and default route; its live path is unverified. Split profiles are rejected.
 - WebRTC is disabled while protected, so WebRTC calls will not work in that state.
 - One Firefox profile owns the tunnel, with a renewable 12-second lease. Other profiles cannot take over.
-- The bridge launches the app on demand. App quit/stop leaves covered Firefox requests blocked. Login startup is deferred.
+- The bridge launches the app on demand. App quit/stop leaves covered Firefox requests blocked when the kill switch is on. Login startup is deferred.
 - wireproxy 1.1.3 archives and licence are checksum-pinned. Local app builds use ad-hoc signing; the extension is unsigned and temporarily loaded.
 - A recent handshake is the readiness signal, not proof of Internet reachability or complete containment.
 

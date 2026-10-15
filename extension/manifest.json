@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
   "name": "Firefox WireGuard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Select app-managed WireGuard profiles for Firefox browsing on macOS.",
   "browser_specific_settings": {
     "gecko": {"id": "firefox-wireguard@local.invalid", "strict_min_version": "128.0"}
   },
   "permissions": ["proxy", "privacy", "storage", "nativeMessaging", "webRequest", "webRequestBlocking", "<all_urls>"],
-  "background": {"scripts": ["controller.js", "background.js"], "persistent": true},
+  "background": {"scripts": ["details.js", "controller.js", "background.js"], "persistent": true},
   "browser_action": {"default_title": "Firefox WireGuard", "default_popup": "popup.html", "default_icon": "icon.svg"},
   "icons": {"48": "icon.svg", "96": "icon.svg"},
   "content_security_policy": "script-src 'self'; object-src 'none'"

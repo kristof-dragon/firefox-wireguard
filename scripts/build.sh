@@ -6,7 +6,7 @@ export SWIFTPM_MODULECACHE_OVERRIDE="$CLANG_MODULE_CACHE_PATH"
 python3 scripts/fetch_backend.py
 swift build --package-path app --scratch-path .build/native --configuration release --disable-sandbox --build-system native
 bin_dir="$(swift build --package-path app --scratch-path .build/native --configuration release --show-bin-path --disable-sandbox --build-system native)"
-app_dir="$PWD/dist/Firefox WireGuard.app"
+app_dir="${FWG_OUTPUT_DIR:-$PWD/dist}/Firefox WireGuard.app"
 mkdir -p "$app_dir/Contents/MacOS" "$app_dir/Contents/Resources"
 cp "$bin_dir/FirefoxWireGuard" "$app_dir/Contents/MacOS/FirefoxWireGuard"
 cp "$bin_dir/firefox-wireguard-bridge" "$app_dir/Contents/MacOS/firefox-wireguard-bridge"
@@ -21,4 +21,4 @@ codesign --force --sign - "$app_dir/Contents/MacOS/firefox-wireguard-bridge"
 codesign --force --sign - "$app_dir"
 codesign --verify --deep --strict "$app_dir"
 python3 scripts/package_extension.py
-printf '%s\n' 'Built dist/Firefox WireGuard.app and dist/firefox-wireguard-0.1.0-unsigned.xpi'
+printf 'Built %s and the versioned unsigned XPI in dist/\n' "$app_dir"

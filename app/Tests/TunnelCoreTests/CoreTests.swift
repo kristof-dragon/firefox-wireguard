@@ -27,6 +27,8 @@ final class CoreTests: XCTestCase {
     func testCanonicalImportAndNoExtraSections() throws {
         let config = try TunnelConfiguration(fixture("# ignored comment"))
         XCTAssertFalse(config.supportsIPv6)
+        XCTAssertEqual(config.clientIPs, ["192.0.2.2"])
+        XCTAssertEqual(config.dnsServers, ["192.0.2.1"])
         XCTAssertFalse(config.canonical.contains("ignored comment"))
         XCTAssertTrue(config.canonical.contains("PersistentKeepalive = 25"))
         let output = config.backendConfig(proxyPort: 9999, healthPort: 9998)
@@ -58,6 +60,7 @@ final class CoreTests: XCTestCase {
                 .replacingOccurrences(of: "0.0.0.0/0", with: "0.0.0.0/0, ::/0")
             let config = try TunnelConfiguration(text)
             XCTAssertTrue(config.supportsIPv6)
+            XCTAssertEqual(config.clientIPs, ["192.0.2.2", "2001:db8::2"])
             XCTAssertTrue(config.canonical.contains("Address = \(addresses)\n"))
         }
     }

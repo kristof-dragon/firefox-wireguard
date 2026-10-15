@@ -34,6 +34,7 @@ public struct TunnelState: Codable {
     public var error: String?
     public var handshakeAge: Int?
     public var supportsIPv6 = false
+    public var details: ConnectionDetails?
     public init() {}
 }
 

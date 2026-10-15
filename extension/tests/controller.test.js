@@ -115,3 +115,91 @@ test("state storage failure prevents backend launch", async () => {
   await controller.connect(PROFILE);
   assert.equal(events.includes("connect"), false); assert.equal(controller.blocked, true);
 });
+
+test("connection details are ephemeral and clear on loss, switching and disconnect", async () => {
+  const {controller, setResponse, data} = fixture();
+  const response = {version: 1, ok: true, profiles: [{id: PROFILE, name: "Test"}],
+    state: {phase: "connected", profileID: PROFILE, proxyPort: 34567,
+      details: {connectionID: "fixture", clientIPs: ["192.0.2.2"], dnsServers: ["192.0.2.1"],
+        downloadedBytes: 1234, uploadedBytes: 567, statsUpdatedAt: 100,
+        publicIP: "203.0.113.8", countryCode: "GB", exitStatus: "ready"}}};
+  setResponse(response);
+  await controller.initialize(); await controller.connect(PROFILE);
+  assert.equal(controller.snapshot().details.publicIP, "203.0.113.8");
+  assert.equal(data.details, undefined);
+  controller.transportLost(); assert.equal(controller.snapshot().details, null);
+  await controller.tail; await controller.refresh();
+  assert.equal(controller.snapshot().details.downloadedBytes, 1234);
+  await controller.connect("22222222-2222-4222-8222-222222222222");
+  assert.equal(controller.snapshot().details, null);
+  await controller.connect(PROFILE); await controller.disconnect();
+  assert.equal(controller.snapshot().details, null);
+});
+test("old companions without details remain compatible and lookup failure does not block", async () => {
+  const {controller, setResponse} = fixture();
+  await controller.initialize(); await controller.connect(PROFILE);
+  assert.equal(controller.blocked, false); assert.equal(controller.snapshot().details, null);
+  setResponse({version: 1, ok: true, profiles: [], state: {phase: "connected", profileID: PROFILE, proxyPort: 34567,
+    details: {connectionID: "fixture", exitStatus: "unavailable", clientIPs: ["192.0.2.2"], dnsServers: ["192.0.2.1"]}}});
+  await controller.refresh();
+  assert.equal(controller.blocked, false);
+  assert.equal(controller.snapshot().details.exitStatus, "unavailable");
+});
+
+test("kill switch defaults on, persists off, and restores normal settings after failure", async () => {
+  const {controller, browser, data} = fixture();
+  await controller.initialize(); await controller.connect(PROFILE);
+  assert.equal(controller.killSwitch, true);
+  await controller.setKillSwitch(false); assert.equal(data.killSwitch, false);
+  assert.equal(controller.directFallback, false); // Healthy tunnel still carries traffic.
+  controller.transportLost();
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, true);
+  await controller.tail;
+  assert.equal(controller.directFallback, true);
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, false);
+  assert.equal(controller.route({url: "https://example.com"}), undefined);
+  assert.deepEqual(browser.proxy.settings.value, {proxyType: "system"});
+  assert.equal(browser.privacy.network.peerConnectionEnabled.value, true);
+  await controller.setKillSwitch(true);
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, true);
+  assert.equal(controller.guard({url: "http://localhost"}).cancel, false);
+  assert.equal(controller.route({url: "https://example.com"})[0].port, 9);
+  assert.equal(data.killSwitch, true);
+});
+test("saved kill switch off permits fallback at startup and resumes a healthy tunnel", async () => {
+  const {controller} = fixture({desired: true, profileID: PROFILE, killSwitch: false});
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, true);
+  await controller.initialize();
+  assert.equal(controller.directFallback, true);
+  await controller.refresh();
+  assert.equal(controller.directFallback, false);
+  assert.equal(controller.route({url: "https://example.com"})[0].port, 34567);
+});
+test("failure to save kill switch or release settings never enables direct fallback", async () => {
+  const {controller, browser} = fixture();
+  await controller.initialize(); await controller.connect(PROFILE);
+  browser.storage.local.set = async () => { throw new Error("unavailable"); };
+  await controller.setKillSwitch(false);
+  assert.equal(controller.killSwitch, true); assert.equal(controller.directFallback, false);
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, true);
+  browser.storage.local.set = async () => {};
+  browser.proxy.settings.clear = async () => { throw new Error("failed"); };
+  await controller.setKillSwitch(false);
+  assert.equal(controller.directFallback, false);
+  assert.equal(controller.guard({url: "https://example.com"}).cancel, true);
+});
+
+test("repeated failure polls do not interrupt established direct browsing with kill switch off", async () => {
+  const {controller, setResponse} = fixture();
+  await controller.initialize(); await controller.connect(PROFILE);
+  await controller.setKillSwitch(false);
+  await controller.fail("offline");
+  setResponse({version: 1, ok: true, profiles: [], state: {phase: "blocked"}});
+  const cancelled = [];
+  controller.changed = () => cancelled.push(controller.guard({url: "https://example.com"}).cancel);
+  await controller.refresh();
+  controller.transportLost(); await controller.tail;
+  assert.ok(cancelled.length > 0);
+  assert.equal(cancelled.some(Boolean), false);
+  assert.equal(controller.directFallback, true);
+});

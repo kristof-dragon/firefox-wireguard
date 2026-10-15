@@ -2,11 +2,11 @@
 
 A native macOS menu-bar app and Firefox extension that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
 
-## Native app 0.1.1 / extension 0.1.0
+## Native app and extension 0.2.0
 
-The native update accepts bare interface addresses and protects unsaved profile text when starting a new profile, switching profiles, or importing. Save keeps the profile selected. The app version appears in its menu to identify the running build.
+Both interfaces show the public exit IP and country flag, current-connection download/upload totals, tunnel DNS servers, and WireGuard client addresses. Firefox has a persistent **Kill switch**, on by default: detected failures block covered requests; switching it off permits normal browsing while the tunnel is unavailable. Direct browsing is clearly labelled.
 
-The first development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. A real remote server and the full browser leak-testing matrix remain to be validated; see [test evidence and limitations](docs/validation.md).
+The first development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
 
 This is a private development repository. Keep all commits suitable for possible public release: no personal references, real profiles, credentials, or machine-specific paths.
 
@@ -24,7 +24,8 @@ This is a private development repository. Keep all commits suitable for possible
 
 - Multiple stored profiles; one Firefox profile owns one active tunnel at a time.
 - Localhost stays local. Other private addresses use the tunnel, subject to remote routing.
-- New covered requests are blocked during connection setup and detected failures. **Disconnect** explicitly returns to ordinary browsing.
+- With **Kill switch** on (default), new covered requests are blocked during connection setup and detected failures. With it off, an unavailable tunnel permits normal browsing. **Disconnect** explicitly returns to ordinary browsing.
+- Public exit lookup uses HTTPS through the tunnel; see [connection details and privacy](docs/installation.md#connection-details).
 - Proxied DNS uses the tunnel. WebRTC and network prediction are disabled while protected.
 - The official WireGuard Mac app is not required. This creates its own connection; use a separate server peer if another client will run simultaneously.
 

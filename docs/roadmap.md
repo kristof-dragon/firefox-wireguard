@@ -10,6 +10,13 @@
 
 Evidence and coverage limits are in [validation.md](validation.md).
 
+## Implemented in 0.2.0
+
+- Shared exit IP/country display, WireGuard session counters, tunnel DNS, and client IPs.
+- Tunnel-only HTTPS exit lookup, bounded responses, cancellation, and no stale results across connections.
+- Persistent Firefox kill switch, on by default, with explicit direct-browsing fallback when switched off.
+- Isolated native-host browser fixture for display and real Firefox kill-switch checks without touching the live integration.
+
 ## Next: real server and browser coverage
 
 - Import a dedicated full-tunnel peer; verify Firefox's exit address while another app retains its original path.

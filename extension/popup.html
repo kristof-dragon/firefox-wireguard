@@ -7,10 +7,29 @@
     <div class="status"><span id="dot" class="dot"></span><strong id="status">Starting…</strong></div>
     <label for="profile">Tunnel profile</label>
     <select id="profile"><option value="">Loading profiles…</option></select>
+    <label class="kill-switch" title="When on, covered Firefox requests are blocked during setup and detected tunnel failures. When off, normal browsing is allowed if the tunnel is unavailable. Localhost stays local. Disabling this extension ends protection.">
+      <span>Kill switch</span><input id="kill-switch" type="checkbox" checked role="switch">
+    </label>
+    <p id="fallback" class="warning" role="status" hidden>Kill switch is off. Firefox is browsing directly.</p>
     <p id="error" role="alert" hidden></p>
+    <section id="connection" class="connection" aria-label="Connection details" hidden>
+      <div class="exit" title="Checked through the tunnel using ipwho.is on connection and every five minutes. Country is approximate IP geolocation. No keys or profile details are sent.">
+        <span class="caption">Public IP</span><strong id="public-ip">Checking…</strong>
+      </div>
+      <div class="traffic" title="WireGuard totals for this connection, including the exit-IP check and other tunnel traffic. Reset on reconnect. Localhost traffic is excluded.">
+        <div><span class="caption">↓ Downloaded</span><strong id="downloaded">—</strong></div>
+        <div><span class="caption">↑ Uploaded</span><strong id="uploaded">—</strong></div>
+      </div>
+      <dl>
+        <div title="DNS servers configured for this tunnel. This does not measure which resolver a website or Firefox DNS-over-HTTPS uses."><dt>Tunnel DNS</dt><dd id="dns">—</dd></div>
+        <div title="Client addresses assigned in the WireGuard configuration."><dt>WireGuard IP</dt><dd id="client-ip">—</dd></div>
+      </dl>
+    </section>
+    <p id="details-unavailable" class="caption" hidden>Update the Mac app to see connection details.</p>
     <div class="actions"><button id="connect" class="primary" disabled>Connect</button><button id="disconnect" hidden>Disconnect</button></div>
   </main>
-  <footer><span>Preview 0.1</span><span title="Only new proxy-compatible requests are covered. Close existing tabs and downloads before connecting. WebRTC calls are disabled while enabled. Localhost remains local. Disabling or removing the extension ends protection." tabindex="0">Connection details ⓘ</span></footer>
+  <footer><span>Preview 0.2.0</span><span title="Only new proxy-compatible requests are covered. Close existing tabs and downloads before connecting. WebRTC calls are disabled while enabled. Localhost remains local. Disabling or removing the extension ends protection." tabindex="0">About protection ⓘ</span></footer>
+  <script src="details.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

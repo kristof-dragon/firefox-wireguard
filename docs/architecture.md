@@ -30,20 +30,30 @@ A supervisor watches its parent app and terminates wireproxy when the app exits.
 
 Health is polled every two seconds. A handshake less than 180 seconds old permits `connected`; a listening port alone does not. Startup without a handshake becomes blocked after 30 seconds; missing health responses become blocked after five seconds. These are detection intervals, not instant network-loss detection. A handshake proves peer contact, not DNS or Internet reachability.
 
-One Firefox client UUID owns the tunnel. Status requests renew a 12-second lease; lease loss stops the backend. Other clients cannot take over or stop it. App quit or **Stop Tunnel** leaves a protected extension blocked. Login startup is not implemented.
+One Firefox client UUID owns the tunnel. Status requests renew a 12-second lease; lease loss stops the backend. Other clients cannot take over or stop it. App quit or **Stop Tunnel** leaves the extension blocked when its kill switch is on; an explicitly disabled kill switch permits normal browsing after failure detection. Login startup is not implemented.
 
 The SOCKS endpoint is unauthenticated. Other local processes can opt into using it. This product selects Firefox's route rather than enforcing exclusive Firefox use.
 
 ## Extension lifecycle
 
-The Manifest V2 extension has a persistent background page. Synchronous request and proxy handlers register before storage is read. Desired protection and selected profile persist separately from observed health. A new installation starts idle; saved protected intent starts blocked.
+The Manifest V2 extension has a persistent background page. Synchronous request and proxy handlers register before storage is read. Desired tunnel state, selected profile, and kill-switch preference persist separately from observed health. The kill switch defaults to on. A new installation starts idle; saved protected intent starts blocked.
 
 Connect persists intent, closes the request guard, verifies private-window permission and control of settings, disables WebRTC/network prediction, and installs a dead proxy. It then asks the app to connect. A recent handshake for the selected profile and verified settings enable its SOCKS5 port with proxy DNS. Proxy results end with `null` to prohibit direct failover.
 
 Localhost names and loopback IPs bypass the tunnel. Other private addresses follow the proxy. An unsupported IPv6 destination does not get a direct fallback.
 
-Transport loss, conflicting settings, mismatched profiles, missing readiness, and startup failures close the guard. Stale transport responses cannot reopen it. Polls may recover a still-running healthy tunnel; a stopped/idle app requires reconnect.
+Transport loss, conflicting settings, mismatched profiles, missing readiness, and startup failures close the guard. Stale transport responses cannot reopen it. With the kill switch explicitly off, failure handling releases owned settings before permitting normal browsing and labels that state as direct fallback. Turning it back on closes the synchronous guard before saving or applying proxy changes. Failed persistence or settings restoration cannot enable direct fallback. Polls may recover a still-running healthy tunnel; a stopped/idle app requires reconnect.
 
 **Disconnect** releases only settings controlled by this extension, restoring the underlying Firefox settings, even with the companion unavailable. Disabling/removing the extension also removes its enforcement; it is not an OS-level kill switch.
 
 Proxy changes do not guarantee closure of existing connections. Close existing tabs and downloads before connecting. Full startup, browser-internal, DNS-over-HTTPS, HTTP/3, IPv6, and socket-lifecycle coverage remain validation work.
+
+## Connection observations
+
+`TunnelState.details` is optional under protocol version 1, so older peers remain usable. Each backend start gets a fresh connection UUID and empty counters. The existing local metrics poll reads WireGuard UAPI `rx_bytes`, `tx_bytes`, and `last_handshake_time_sec`. The parser rejects missing, duplicate, malformed, or overflowing counters without logging the metrics body.
+
+The app owns a single public-IP lookup task per connection. After a healthy handshake and every five minutes, fixed system curl requests `https://ipwho.is/?fields=success,ip,country_code` through `socks5h://127.0.0.1:<session-port>`. Curl configuration files and environment proxy overrides are disabled; bypass lists are empty, HTTPS/TLS verification is required, redirects are not followed, and response/time limits apply. No direct/system-resolver fallback is configured. Stop, reconnect, and unhealthy state cancel the task and invalidate its result generation. A provider failure affects only the display.
+
+DNS/client addresses come from the validated configuration without keys or endpoint information. Public response IPs and country codes are validated; flags are generated locally without remote images. All display fields remain in memory, shared through the existing native channel. Firefox copies only known display fields and clears them on transport loss, disconnect, or profile change. No new extension permissions, analytics, or persistent IP history were added.
+
+Public distribution should review provider terms, availability, shared-exit rate limits, and Mozilla privacy disclosures. The free service is an external dependency; there is no private API credential in the app.

@@ -14,8 +14,13 @@ import TunnelCore
     private var lastLease = Date()
     private let session: URLSession
     private let helperURL: URL
+    private let exitLookup: ExitIPLookingUp
+    private var lookupTask: Task<Void, Never>?
+    private var lookupGeneration = UUID()
+    private var nextLookup = Date.distantPast
 
-    init(helperURL: URL? = nil) {
+    init(helperURL: URL? = nil, exitLookup: ExitIPLookingUp = SOCKSExitIPLookup()) {
+        self.exitLookup = exitLookup
         self.helperURL = helperURL ?? Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("firefox-wireguard-bridge")
         let config = URLSessionConfiguration.ephemeral
         config.connectionProxyDictionary = [:]
@@ -52,6 +57,8 @@ import TunnelCore
                 self.state.phase = "blocked"
                 self.state.error = "The WireGuard backend stopped. Check the profile and reconnect."
                 self.state.proxyPort = nil
+                self.invalidateExit()
+                self.state.details?.statsUpdatedAt = nil
             }
         }
         // Release reservations immediately before spawn. If another process wins
@@ -62,6 +69,7 @@ import TunnelCore
         state = TunnelState()
         state.phase = "connecting"; state.profileID = profile.id
         state.proxyPort = proxyPort; state.supportsIPv6 = configuration.supportsIPv6
+        state.details = ConnectionDetails(connectionID: token.uuidString, clientIPs: configuration.clientIPs, dnsServers: configuration.dnsServers)
         let bytes = Data(configuration.backendConfig(proxyPort: proxyPort, healthPort: metricsPort).utf8)
         // Avoid blocking the menu bar if a child exits before consuming the input.
         DispatchQueue.global(qos: .userInitiated).async {
@@ -72,6 +80,7 @@ import TunnelCore
 
     func stop(reason: String?) {
         generation = UUID()
+        invalidateExit()
         if let old = process, old.isRunning {
             old.terminate()
             // The supervisor handles its own child. Never SIGKILL the supervisor
@@ -95,24 +104,55 @@ import TunnelCore
             let (data, response) = try await session.data(from: URL(string: "http://127.0.0.1:\(healthPort)/metrics")!)
             guard generation == token else { return }
             guard (response as? HTTPURLResponse)?.statusCode == 200, data.count < 65_536 else { throw UserError("Invalid backend response.") }
-            let text = String(decoding: data, as: UTF8.self)
-            let handshakes = text.components(separatedBy: .newlines).compactMap { line -> TimeInterval? in
-                guard line.hasPrefix("last_handshake_time_sec=") else { return nil }
-                return TimeInterval(line.dropFirst("last_handshake_time_sec=".count))
-            }
-            let age = handshakes.filter { $0 > 0 }.map { max(0, Int(Date().timeIntervalSince1970 - $0)) }.min()
+            let metrics = try WireGuardMetrics(data)
+            state.details?.downloadedBytes = metrics.downloadedBytes
+            state.details?.uploadedBytes = metrics.uploadedBytes
+            state.details?.statsUpdatedAt = Date().timeIntervalSince1970
+            let age = metrics.handshakeTime.map { Int(max(0, Date().timeIntervalSince1970 - $0)) }
             state.handshakeAge = age
             if let age, age < 180 {
                 state.phase = "connected"; state.error = nil
+                updateExitIfNeeded()
             } else if Date().timeIntervalSince(started) > 30 {
                 state.phase = "blocked"
                 state.error = "No recent WireGuard handshake. Check the server, endpoint, and keys."
+                invalidateExit()
             }
         } catch {
             guard generation == token else { return }
             if Date().timeIntervalSince(started) > 5 {
                 state.phase = "blocked"; state.error = "The WireGuard backend is not responding. Reconnect to retry."
+                invalidateExit()
+                state.details?.statsUpdatedAt = nil
             }
+        }
+    }
+
+    private func invalidateExit() {
+        lookupGeneration = UUID()
+        lookupTask?.cancel(); lookupTask = nil; nextLookup = .distantPast
+        state.details?.publicIP = nil; state.details?.countryCode = nil
+        state.details?.exitCheckedAt = nil; state.details?.exitStatus = "waiting"
+    }
+
+    private func updateExitIfNeeded() {
+        guard lookupTask == nil, Date() >= nextLookup, let port = state.proxyPort else { return }
+        let token = generation, lookupToken = UUID(), lookup = exitLookup
+        lookupGeneration = lookupToken
+        // Refresh every five minutes. Service failures never affect tunnel health.
+        nextLookup = Date().addingTimeInterval(300)
+        state.details?.publicIP = nil; state.details?.countryCode = nil
+        state.details?.exitCheckedAt = nil; state.details?.exitStatus = "checking"
+        lookupTask = Task { [weak self] in
+            let result: PublicExit?
+            do { result = try await lookup.lookup(proxyPort: port) } catch { result = nil }
+            guard let self, self.generation == token, self.lookupGeneration == lookupToken,
+                  self.state.phase == "connected" else { return }
+            self.lookupTask = nil
+            self.state.details?.publicIP = result?.ip
+            self.state.details?.countryCode = result?.countryCode
+            self.state.details?.exitStatus = result == nil ? "unavailable" : "ready"
+            self.state.details?.exitCheckedAt = Date().timeIntervalSince1970
         }
     }
 

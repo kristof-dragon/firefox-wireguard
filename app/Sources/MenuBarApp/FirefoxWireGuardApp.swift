@@ -40,6 +40,9 @@ struct MenuPanel: View {
                 Text(profile.name).font(.subheadline)
             }
             if let error = model.error ?? tunnel.state.error { Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+            if let details = tunnel.state.details {
+                ConnectionPanel(details: details, connected: tunnel.state.phase == "connected")
+            }
             Divider()
             Button("Manage Profiles…") { openWindow(id: "profiles"); NSApp.activate(ignoringOtherApps: true) }
             Button(model.integrationInstalled ? "Repair Firefox Integration" : "Install Firefox Integration") { model.installIntegration() }
@@ -47,7 +50,7 @@ struct MenuPanel: View {
                 .disabled(!model.ready)
             if tunnel.state.profileID != nil {
                 Button("Stop Tunnel") { model.tunnel.stop(reason: "Tunnel stopped in the app. Reconnect or disconnect from Firefox.") }
-                    .help("Stops the connection. Firefox stays blocked until you reconnect or explicitly disconnect in the extension.")
+                    .help("Stops the connection. Firefox blocks covered requests if its kill switch is on, or returns to normal browsing if it is off.")
             }
             Divider()
             Text("\(model.profiles.count) configured profile\(model.profiles.count == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary)
@@ -55,7 +58,7 @@ struct MenuPanel: View {
                 Text("Version \(version)").font(.caption).foregroundStyle(.secondary)
             }
             Button("Quit") { model.shutdown(); NSApp.terminate(nil) }
-        }.padding(16).frame(width: 300)
+        }.padding(16).frame(width: 350)
     }
     var status: String {
         switch tunnel.state.phase {
@@ -63,6 +66,39 @@ struct MenuPanel: View {
         case "connecting": return "Waiting for handshake…"
         case "blocked": return "Connection unavailable"
         default: return model.profiles.isEmpty ? "Add a WireGuard profile" : "Ready for Firefox"
+        }
+    }
+}
+
+struct ConnectionPanel: View {
+    let details: ConnectionDetails
+    let connected: Bool
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            row("Public IP", value: publicIP)
+                .help("Exit address checked through this tunnel using ipwho.is at connection and every five minutes. Country is approximate geolocation. The service sees your exit IP; no keys or profile details are sent.")
+            HStack {
+                row("↓ Downloaded", value: ConnectionDetails.byteLabel(details.statsUpdatedAt == nil ? nil : details.downloadedBytes))
+                Spacer(minLength: 12)
+                row("↑ Uploaded", value: ConnectionDetails.byteLabel(details.statsUpdatedAt == nil ? nil : details.uploadedBytes))
+            }.help("WireGuard totals for this connection, including the exit-IP check and other tunnel traffic. Reset on reconnect; excludes localhost bypass traffic.")
+            row("Tunnel DNS", value: details.dnsServers.joined(separator: ", "))
+                .help("DNS servers configured for the active tunnel. This is not a DNS leak test or a measurement of Firefox DNS-over-HTTPS.")
+            row("WireGuard IP", value: details.clientIPs.joined(separator: ", "))
+                .help("Client addresses inside this WireGuard tunnel.")
+        }.font(.caption)
+    }
+    private var publicIP: String {
+        guard connected else { return "—" }
+        if details.exitStatus == "ready", let ip = details.publicIP { return "\(details.countryFlag) \(ip)" }
+        return details.exitStatus == "unavailable" ? "Unavailable" : "Checking…"
+    }
+    private func row(_ title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title).foregroundStyle(.secondary)
+            Text(value.isEmpty ? "—" : value).monospacedDigit().textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
