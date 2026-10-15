@@ -12,6 +12,10 @@ The development version is implemented and builds locally. It includes profile i
 
 This project is open source under the [Mozilla Public License 2.0](LICENSE). The Firefox add-on is named **WireGuard for Firefox**; the native companion keeps its existing name and identifiers.
 
+Extension 0.2.1 was submitted for a public Mozilla Add-ons listing on 2026-10-15
+and is awaiting review. It is not yet an approved, signed public release.
+See the [submission record](docs/firefox-submission.md#submission-record).
+
 ## Try it
 
 1. Run `scripts/build.sh` on a Mac with a Swift toolchain and Python 3.

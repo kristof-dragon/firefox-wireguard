@@ -1,5 +1,27 @@
 # Firefox listing and reviewer information
 
+## Submission record
+
+Version 0.2.1 was submitted to Mozilla on 2026-10-15 for a public AMO listing.
+The submission is **Awaiting Review**; submission is not approval or publication.
+Mozilla will notify the publisher when review/publication completes.
+
+- Listing slug: `wireguard-for-firefox`
+- Intended public listing: <https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/>
+- AMO version ID: `6581988`; file ID: `5126120`
+- Submitted source commit: `94d9ef6641b231890d991abff362b4123bf5d1e0`
+- Unsigned XPI SHA-256: `1eec5df25711b62df085db7582a97a29366f53e5d3f9a3b4929132928d28e4ab`
+- Readable extension source is included in the XPI. The audited full-project
+  source archive was also attached for reviewers, with version notes and test
+  instructions. No native binary or real profile was uploaded.
+- Desktop Firefox 140+ was selected; Android was not. The listing explicitly
+  describes the macOS-only companion requirement and experimental status.
+- Public support uses the project's issue tracker; no personal support email
+  is published. The listing uses the project icon and a synthetic-data screenshot.
+
+Check the Developer Hub for current status; the record above describes the
+submission date and does not imply subsequent approval.
+
 ## Listing
 
 - Name: **WireGuard for Firefox**
@@ -8,7 +30,7 @@
 - Platform: macOS desktop only
 - Minimum Firefox: 140
 - Licence: Mozilla Public License 2.0
-- Categories: Privacy & Security; Other
+- Category: Privacy & Security
 - Experimental: yes
 - Payment: the extension and companion source are free; users supply their own
   authorised WireGuard server. No VPN subscription is included or sold.
