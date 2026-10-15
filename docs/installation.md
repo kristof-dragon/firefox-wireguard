@@ -1,4 +1,6 @@
-# Install and try version 0.1.0
+# Install and try the development build
+
+Current native app: 0.1.1. Firefox extension: 0.1.0. The native app version appears near the bottom of its menu-bar panel.
 
 ## Build
 
@@ -24,6 +26,10 @@ The package declares macOS 13 as its minimum. Apple Silicon/macOS 27 with Swift 
 3. Choose **Manage Profiles…**, then **Import…**, or paste a configuration into a new profile and save it. Approve a Keychain prompt if shown.
 
 The app registers its current path. After moving it, reopen it and choose **Repair Firefox Integration**. Disconnect and quit before moving or replacing an app.
+
+The **+** button starts a new profile; **Save Profile** saves the text currently being edited and keeps it selected. If there are unsaved changes, starting a new profile, switching to another profile, or importing asks **Save / Discard Changes / Cancel** first. A failed save leaves the current draft intact. Cancelling the file picker or choosing an invalid import also leaves the draft intact. Validation errors stay in the profile editor and clear when its name or configuration changes.
+
+Drafts remain in memory when the profile window closes and reopens, but are not automatically saved when the app quits. Save before quitting.
 
 ## Supported profiles
 

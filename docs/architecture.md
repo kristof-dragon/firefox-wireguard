@@ -1,12 +1,14 @@
 # Architecture
 
-This describes the implemented 0.1.0 development version. Validation scope is recorded separately in [validation.md](validation.md).
+This describes native app 0.1.1 and extension 0.1.0. Validation scope is recorded separately in [validation.md](validation.md).
 
 ## Native app and secrets
 
 The SwiftUI app uses `MenuBarExtra` and runs as an accessory without a Dock icon. It owns profile management, Keychain access, backend lifecycle, and native-host registration. It requires no privileged access and configures no OS network interfaces, routes, or DNS.
 
 Profile IDs and names are in a mode-0600 JSON index inside a mode-0700 per-user application-support directory. Complete normalized configurations are in macOS Keychain, accessible when the device is unlocked. Editing reveals keys in the native editor. Corrupt metadata is reported rather than overwritten. Configuration contents never reach Firefox or routine logs.
+
+The app owns an in-memory editor draft independently of window lifetime. Dirty drafts require Save, Discard, or Cancel before new-profile, selection, or import navigation. A failed save cancels navigation and preserves the draft. Editor errors are separate from application/tunnel status. No draft contents are written to disk or automatically saved on app quit.
 
 A strict parser supports one interface and peer, an IPv4 full tunnel, IP-literal DNS, and optional paired IPv6 address/default route. It rejects unknown fields, shell hooks, backend sections, and environment substitutions. Keepalive is normalized to 25 seconds; a fixed client listening port is omitted. See [installation.md](installation.md) for compatibility.
 

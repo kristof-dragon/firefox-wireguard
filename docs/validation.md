@@ -1,13 +1,14 @@
 # Validation record
 
-Version 0.1.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
+Native app 0.1.1 / extension 0.1.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
 
 ## Passed
 
 | Check | Evidence |
 | --- | --- |
 | Native release build and bundle | Swift compilation, app packaging, nested ad-hoc signatures, strict signature verification |
-| Native suite | 12 passing tests covering bare/prefixed interface addresses, configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
+| Native suite | 18 passing tests covering profile draft navigation, bare/prefixed interface addresses, configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
+| Profile editor state | Six tests cover Cancel preservation, failed Save preservation, Save before New, switching profiles only after Save, explicit Discard of imported drafts, and retaining selection after Save |
 | Keychain | Disposable entry written, read, updated, deleted; no real profile used |
 | Engine readiness | Temporary WireGuard peers establish a real handshake with a bare client interface address; app manager reports ready only afterwards; another client cannot take over; stop clears the port |
 | Extension suite | 15 passing tests covering startup guards, localhost, connection ordering, private-window permission, failure, stale readiness, settings conflicts/restoration, and helper timeout recovery |

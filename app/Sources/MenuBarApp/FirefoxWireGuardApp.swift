@@ -20,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .onAppear { delegate.onQuit = { model.shutdown() } }
         }.menuBarExtraStyle(.window)
         Window("WireGuard Profiles", id: "profiles") {
-            ProfileWindow(model: model)
+            ProfileWindow(model: model, editor: model.editor)
                 .frame(minWidth: 660, minHeight: 500)
                 .onAppear { delegate.onQuit = { model.shutdown() } }
         }.defaultSize(width: 760, height: 580)
@@ -51,6 +51,9 @@ struct MenuPanel: View {
             }
             Divider()
             Text("\(model.profiles.count) configured profile\(model.profiles.count == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary)
+            if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                Text("Version \(version)").font(.caption).foregroundStyle(.secondary)
+            }
             Button("Quit") { model.shutdown(); NSApp.terminate(nil) }
         }.padding(16).frame(width: 300)
     }
@@ -59,60 +62,81 @@ struct MenuPanel: View {
         case "connected": return "Tunnel ready"
         case "connecting": return "Waiting for handshake…"
         case "blocked": return "Connection unavailable"
-        default: return "Ready for Firefox"
+        default: return model.profiles.isEmpty ? "Add a WireGuard profile" : "Ready for Firefox"
         }
     }
 }
 
 struct ProfileWindow: View {
     @ObservedObject var model: AppModel
-    @State private var selected: String?
-    @State private var name = ""
-    @State private var configuration = ""
-    @State private var editingID: String?
+    @ObservedObject var editor: ProfileEditor
     @State private var confirmDelete = false
+    @State private var confirmNavigation = false
     var body: some View {
         HSplitView {
             VStack(alignment: .leading) {
                 Text("Profiles").font(.title2.bold()).padding(.horizontal)
-                List(model.profiles, selection: $selected) { profile in
+                List(model.profiles, selection: Binding(get: { editor.draft.id }, set: selectProfile)) { profile in
                     Label(profile.name, systemImage: "network").tag(profile.id)
-                }.onChange(of: selected) { value in
-                    guard let profile = model.profiles.first(where: { $0.id == value }), let text = model.text(for: profile) else { return }
-                    editingID = profile.id; name = profile.name; configuration = text
                 }
                 HStack {
-                    Button { clear() } label: { Image(systemName: "plus") }.help("Add a profile")
-                    Button { confirmDelete = true } label: { Image(systemName: "minus") }.disabled(editingID == nil).help("Remove selected profile")
+                    Button { navigate(.new) } label: { Image(systemName: "plus") }.help("Start a new profile. You will be asked to save or discard unsaved changes.")
+                    Button { confirmDelete = true } label: { Image(systemName: "minus") }.disabled(editor.draft.id == nil).help("Remove selected profile")
                     Spacer()
                     Button("Import…", action: importFile)
                 }.padding()
             }.frame(minWidth: 200, idealWidth: 230)
             VStack(alignment: .leading, spacing: 12) {
-                Text(editingID == nil ? "New Profile" : "Edit Profile").font(.title2.bold())
-                TextField("Profile name", text: $name)
+                Text(editor.draft.id == nil ? "New Profile" : "Edit Profile").font(.title2.bold())
+                TextField("Profile name", text: $editor.draft.name)
                 Text("WireGuard configuration").font(.headline)
-                TextEditor(text: $configuration).font(.system(.body, design: .monospaced))
+                TextEditor(text: $editor.draft.configuration).font(.system(.body, design: .monospaced))
                     .border(Color.secondary.opacity(0.3)).accessibilityLabel("WireGuard configuration")
                     .help("Paste a single-peer, full-tunnel configuration. DNS IPs are required. Keys and configuration are stored in Keychain; editing reveals them here.")
-                if let error = model.error { Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+                if let error = model.profileError ?? (model.ready ? nil : model.error) { Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
                 HStack {
                     Image(systemName: "key.fill").foregroundStyle(.secondary)
-                    Text("Stored in macOS Keychain").font(.caption).foregroundStyle(.secondary)
+                    Text(editor.isDirty ? "Unsaved changes" : editor.draft.id == nil ? "Save to macOS Keychain" : "Stored in macOS Keychain").font(.caption).foregroundStyle(.secondary)
+                        .help("Save Profile stores the configuration in macOS Keychain. Unsaved text stays in memory until the app quits.")
                     Spacer()
                     Button("Save Profile") {
-                        if model.save(id: editingID, name: name, text: configuration) { clear() }
-                    }.keyboardShortcut("s", modifiers: .command).disabled(!model.ready || configuration.isEmpty || name.isEmpty)
+                        editor.save(using: persist)
+                    }.keyboardShortcut("s", modifiers: .command).disabled(!model.ready || editor.draft.configuration.isEmpty || editor.draft.name.isEmpty)
                 }
             }.padding(20).frame(minWidth: 420)
         }.padding(.vertical, 16)
-            .confirmationDialog("Remove this profile and its Keychain configuration?", isPresented: $confirmDelete) {
+            .onDisappear { editor.cancel(); confirmNavigation = false }
+            .onChange(of: editor.draft.name) { _ in model.profileError = nil }
+            .onChange(of: editor.draft.configuration) { _ in model.profileError = nil }
+            .alert("Save changes to this profile?", isPresented: $confirmNavigation) {
+                Button("Save") { editor.save(using: persist) }.keyboardShortcut(.defaultAction)
+                Button("Discard Changes", role: .destructive) { editor.discard(); model.profileError = nil }
+                Button("Cancel", role: .cancel) { editor.cancel() }
+            } message: {
+                Text("Save this profile before continuing, discard the changes, or cancel to keep editing.")
+            }
+            .confirmationDialog("Remove this profile, its Keychain configuration, and any unsaved changes?", isPresented: $confirmDelete) {
                 Button("Remove Profile", role: .destructive) {
-                    if let profile = model.profiles.first(where: { $0.id == editingID }) { model.remove(profile); if model.error == nil { clear() } }
+                    if let profile = model.profiles.first(where: { $0.id == editor.draft.id }) {
+                        model.remove(profile)
+                        if model.profileError == nil { editor.resetAfterDeletion() }
+                    }
                 }
             }
     }
-    private func clear() { selected = nil; editingID = nil; name = ""; configuration = "" }
+    private func persist(_ draft: ProfileEditor.Draft) -> Profile? {
+        model.save(id: draft.id, name: draft.name, text: draft.configuration)
+    }
+    private func navigate(_ destination: ProfileEditor.Destination) {
+        if editor.request(destination) { model.profileError = nil }
+        else { confirmNavigation = true }
+    }
+    private func selectProfile(_ id: String?) {
+        guard let id, id != editor.draft.id,
+              let profile = model.profiles.first(where: { $0.id == id }),
+              let text = model.text(for: profile) else { return }
+        navigate(.profile(profile, text))
+    }
     private func importFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.plainText, UTType(filenameExtension: "conf") ?? .data]
@@ -123,7 +147,7 @@ struct ProfileWindow: View {
             guard size <= 32_768 else { throw UserError("Configuration exceeds the supported size.") }
             let text = try String(contentsOf: url, encoding: .utf8)
             _ = try TunnelConfiguration(text)
-            clear(); configuration = text; name = url.deletingPathExtension().lastPathComponent; model.error = nil
-        } catch { model.error = (error as? UserError)?.message ?? "Could not read this configuration file." }
+            navigate(.imported(name: url.deletingPathExtension().lastPathComponent, configuration: text))
+        } catch { model.profileError = (error as? UserError)?.message ?? "Could not read this configuration file." }
     }
 }

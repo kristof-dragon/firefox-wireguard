@@ -2,7 +2,9 @@
 
 A native macOS menu-bar app and Firefox extension that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
 
-## Version 0.1.0
+## Native app 0.1.1 / extension 0.1.0
+
+The native update accepts bare interface addresses and protects unsaved profile text when starting a new profile, switching profiles, or importing. Save keeps the profile selected. The app version appears in its menu to identify the running build.
 
 The first development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. A real remote server and the full browser leak-testing matrix remain to be validated; see [test evidence and limitations](docs/validation.md).
 

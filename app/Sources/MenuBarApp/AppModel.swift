@@ -5,8 +5,10 @@ import TunnelCore
 @MainActor final class AppModel: ObservableObject {
     @Published var profiles: [Profile] = []
     @Published var error: String?
+    @Published var profileError: String?
     @Published var integrationInstalled = false
     let tunnel = TunnelManager()
+    let editor = ProfileEditor()
     private var store: ProfileStore?
     private var server: ControlServer?
     private var lockFD: Int32 = -1
@@ -45,22 +47,22 @@ import TunnelCore
     }
     func text(for profile: Profile) -> String? {
         do { return try store?.configuration(profile.id).canonical }
-        catch { self.error = (error as? UserError)?.message ?? "Could not read the profile."; return nil }
+        catch { profileError = (error as? UserError)?.message ?? "Could not read the profile."; return nil }
     }
-    func save(id: String?, name: String, text: String) -> Bool {
-        guard let store, ready else { return false }
+    func save(id: String?, name: String, text: String) -> Profile? {
+        guard let store, ready else { profileError = "Profile storage is unavailable. Check the app's menu-bar status."; return nil }
         do {
             guard tunnel.state.profileID != id || id == nil else { throw UserError("Disconnect this profile in Firefox before editing it.") }
-            try store.save(id: id, name: name, configuration: text)
-            profiles = store.profiles; error = nil; return true
-        } catch { self.error = (error as? UserError)?.message ?? "Could not save the profile."; return false }
+            let profile = try store.save(id: id, name: name, configuration: text)
+            profiles = store.profiles; profileError = nil; return profile
+        } catch { profileError = (error as? UserError)?.message ?? "Could not save the profile."; return nil }
     }
     func remove(_ profile: Profile) {
         guard let store else { return }
         do {
             guard tunnel.state.profileID != profile.id else { throw UserError("Disconnect this profile in Firefox before removing it.") }
-            try store.remove(profile.id); profiles = store.profiles; error = nil
-        } catch { self.error = (error as? UserError)?.message ?? "Could not remove the profile." }
+            try store.remove(profile.id); profiles = store.profiles; profileError = nil
+        } catch { profileError = (error as? UserError)?.message ?? "Could not remove the profile." }
     }
     private func handle(_ request: ControlRequest) -> ControlResponse {
         guard let store else { return ControlResponse(id: request.id, ok: false, error: "The companion app is unavailable. Check its menu-bar status.") }
