@@ -16,11 +16,11 @@ A strict parser supports one interface and peer, an IPv4 full tunnel, IP-literal
 
 The extension ID is `firefox-wireguard@local.invalid`. Firefox starts `org.firefoxwireguard.bridge`, whose native-host manifest allows only that ID. The helper also checks Firefox's origin argument.
 
-The bridge forwards bounded, length-prefixed JSON to a mode-0600 Unix socket in the private application directory. Both ends validate the peer UID. An advisory lock prevents duplicate app ownership. These controls isolate other users, not hostile software already running as the same user.
+The bridge forwards bounded, length-prefixed JSON to a mode-0600 Unix socket in the private application directory. Both ends validate the peer UID. An advisory lock prevents duplicate app ownership. Failed startup releases its descriptor, and **Retry Startup** can acquire ownership after another copy quits. Profile management stays unavailable until startup succeeds; registration repair remains usable independently. A successfully started replacement updates an existing registration to its own helper. These controls isolate other users, not hostile software already running as the same user.
 
 Protocol version 1 allows only `status`, `connect`, and `disconnect`. Commands carry a client UUID; connect adds a profile UUID. Replies contain profile summaries, state, and a loopback proxy port when appropriate. No arbitrary commands, paths, configurations, or secret exports are supported. Frames are limited to 64 KiB.
 
-The bridge can launch its containing app. It retries socket connection establishment, never a mutating request whose response may have been lost. A timeout advises checking the app and any Keychain prompt. The extension reopens failed native ports on later requests.
+The bridge can launch its containing app only for an explicit `connect` request. Background `status` polling and `disconnect` never relaunch it after Quit. Before forwarding each request, the helper checks that its manifest still points to its executable; a stale helper exits, letting Firefox start the newly registered one on the next request. It retries socket connection establishment, never a mutating request whose response may have been lost. A timeout advises checking the app and any Keychain prompt. The extension reopens failed native ports on later requests.
 
 ## Backend lifecycle
 

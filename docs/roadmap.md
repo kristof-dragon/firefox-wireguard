@@ -17,6 +17,12 @@ Evidence and coverage limits are in [validation.md](validation.md).
 - Persistent Firefox kill switch, on by default, with explicit direct-browsing fallback when switched off.
 - Isolated native-host browser fixture for display and real Firefox kill-switch checks without touching the live integration.
 
+## Implemented in native 0.2.1
+
+- Status polling respects app Quit; only explicit Connect can launch the companion.
+- Retry Startup and independent integration repair recover a blocked second copy.
+- A started replacement refreshes an existing registration; updated helpers exit when their registration changes.
+
 ## Next: real server and browser coverage
 
 - Import a dedicated full-tunnel peer; verify Firefox's exit address while another app retains its original path.

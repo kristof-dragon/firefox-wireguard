@@ -48,10 +48,12 @@ while true {
         guard let data = try Frames.read(fd: STDIN_FILENO) else { break }
         let request = try JSONDecoder().decode(ControlRequest.self, from: data)
         try request.validate()
+        // Firefox may retain an old native process across app upgrades. Close it
+        // once registration changes so the next request starts the new helper.
+        guard NativeHostRegistration.matches(helper: executable, manifest: URL(fileURLWithPath: CommandLine.arguments[1])) else { break }
         let response: Data
         do {
-            var connected = try? LocalSocket.connect()
-            if connected == nil {
+            let fd = try CompanionConnection.open(command: request.command, connect: { try LocalSocket.connect() }, launch: {
                 // Retry connection establishment only. Never replay a mutating
                 // request whose response may have been lost or delayed by Keychain.
                 let app = contents.deletingLastPathComponent()
@@ -60,15 +62,9 @@ while true {
                     launch.executableURL = URL(fileURLWithPath: "/usr/bin/open")
                     launch.arguments = ["-g", app.path]
                     launch.standardOutput = FileHandle.nullDevice; launch.standardError = FileHandle.nullDevice
-                    try? launch.run()
-                    for _ in 0..<15 {
-                        Thread.sleep(forTimeInterval: 0.1)
-                        connected = try? LocalSocket.connect()
-                        if connected != nil { break }
-                    }
-                }
-            }
-            guard let fd = connected else { throw UserError("Open the Firefox WireGuard app and try again.") }
+                    try launch.run()
+                } else { throw UserError("Use the packaged companion app.") }
+            })
             defer { Darwin.close(fd) }
             try Frames.write(data, fd: fd)
             guard let answer = try Frames.read(fd: fd) else { throw UserError("The companion app did not respond.") }

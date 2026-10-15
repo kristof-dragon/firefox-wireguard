@@ -40,20 +40,22 @@ struct MenuPanel: View {
                 Text(profile.name).font(.subheadline)
             }
             if let error = model.error ?? tunnel.state.error { Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+            if let error = model.integrationError { Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+            if !model.ready { Button("Retry Startup") { model.retryStartup() } }
             if let details = tunnel.state.details {
                 ConnectionPanel(details: details, connected: tunnel.state.phase == "connected")
             }
             Divider()
             Button("Manage Profiles…") { openWindow(id: "profiles"); NSApp.activate(ignoringOtherApps: true) }
-            Button(model.integrationInstalled ? "Repair Firefox Integration" : "Install Firefox Integration") { model.installIntegration() }
-                .help("Registers this app's helper with Firefox. Install the extension separately. Repeat after moving the app.")
                 .disabled(!model.ready)
+            Button(model.integrationInstalled ? "Repair Firefox Integration" : "Install Firefox Integration") { model.installIntegration() }
+                .help("Registers this copy's helper with Firefox, even if another copy is running. Reload the extension after repairing an older version's registration.")
             if tunnel.state.profileID != nil {
                 Button("Stop Tunnel") { model.tunnel.stop(reason: "Tunnel stopped in the app. Reconnect or disconnect from Firefox.") }
                     .help("Stops the connection. Firefox blocks covered requests if its kill switch is on, or returns to normal browsing if it is off.")
             }
             Divider()
-            Text("\(model.profiles.count) configured profile\(model.profiles.count == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary)
+            if model.ready { Text("\(model.profiles.count) configured profile\(model.profiles.count == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary) }
             if let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
                 Text("Version \(version)").font(.caption).foregroundStyle(.secondary)
             }
@@ -61,6 +63,7 @@ struct MenuPanel: View {
         }.padding(16).frame(width: 350)
     }
     var status: String {
+        guard model.ready else { return "Startup needs attention" }
         switch tunnel.state.phase {
         case "connected": return "Tunnel ready"
         case "connecting": return "Waiting for handshake…"

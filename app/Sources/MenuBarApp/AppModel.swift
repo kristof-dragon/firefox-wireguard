@@ -7,43 +7,50 @@ import TunnelCore
     @Published var error: String?
     @Published var profileError: String?
     @Published var integrationInstalled = false
+    @Published var integrationError: String?
+    @Published private(set) var ready = false
     let tunnel = TunnelManager()
     let editor = ProfileEditor()
     private var store: ProfileStore?
     private var server: ControlServer?
-    private var lockFD: Int32 = -1
+    private var appLock: AppInstanceLock?
+    private let directory: URL
+    private let manifestURL: URL
+    private let helperURL: URL
+    private let vault: SecretVault
 
-    init() {
+    init(directory: URL = SecureFiles.support, manifestURL: URL = NativeHostRegistration.defaultURL,
+         helperURL: URL? = nil, vault: SecretVault = KeychainVault()) {
+        self.directory = directory; self.manifestURL = manifestURL; self.vault = vault
+        self.helperURL = helperURL ?? Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("firefox-wireguard-bridge")
+        integrationInstalled = FileManager.default.fileExists(atPath: manifestURL.path)
+        retryStartup()
+    }
+    func retryStartup() {
+        guard !ready else { return }
         do {
-            try SecureFiles.directory(SecureFiles.support)
-            let path = SecureFiles.support.appendingPathComponent("app.lock").path
-            lockFD = Darwin.open(path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, 0o600)
-            guard lockFD >= 0, flock(lockFD, LOCK_EX | LOCK_NB) == 0 else {
-                throw UserError("Another copy of Firefox WireGuard is already running.")
-            }
-            store = try ProfileStore(directory: SecureFiles.support)
-            profiles = store!.profiles
-            server = try ControlServer { [weak self] request in
+            let ownership = try AppInstanceLock(directory: directory)
+            let loadedStore = try ProfileStore(directory: directory, vault: vault)
+            let control = try ControlServer(path: directory.appendingPathComponent("control.sock").path) { [weak self] request in
                 DispatchQueue.main.sync {
                     self?.handle(request) ?? ControlResponse(id: request.id, ok: false, error: "Companion app is closing.")
                 }
             }
+            appLock = ownership; store = loadedStore; server = control
+            profiles = loadedStore.profiles; ready = true; error = nil
             integrationInstalled = FileManager.default.fileExists(atPath: manifestURL.path)
+            // An explicitly opened replacement app refreshes an existing
+            // registration after obtaining ownership. First install stays explicit.
+            if integrationInstalled && !NativeHostRegistration.matches(helper: helperURL, manifest: manifestURL) {
+                installIntegration()
+            }
         } catch { self.error = (error as? UserError)?.message ?? "Unable to initialise private application storage." }
-    }
-    var ready: Bool { store != nil && server != nil }
-    private var manifestURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Mozilla/NativeMessagingHosts/\(Integration.hostName).json")
     }
     func installIntegration() {
         do {
-            let helper = Bundle.main.executableURL!.deletingLastPathComponent().appendingPathComponent("firefox-wireguard-bridge")
-            guard FileManager.default.isExecutableFile(atPath: helper.path) else { throw UserError("Use the packaged app to install Firefox integration.") }
-            try FileManager.default.createDirectory(at: manifestURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            let manifest: [String: Any] = ["name": Integration.hostName, "description": "Firefox WireGuard companion", "path": helper.path, "type": "stdio", "allowed_extensions": [Integration.extensionID]]
-            try SecureFiles.write(JSONSerialization.data(withJSONObject: manifest, options: [.prettyPrinted, .sortedKeys]), to: manifestURL)
-            integrationInstalled = true; error = nil
-        } catch { self.error = (error as? UserError)?.message ?? "Could not install Firefox integration." }
+            try NativeHostRegistration.install(helper: helperURL, manifest: manifestURL)
+            integrationInstalled = true; integrationError = nil
+        } catch { integrationError = (error as? UserError)?.message ?? "Could not install Firefox integration." }
     }
     func text(for profile: Profile) -> String? {
         do { return try store?.configuration(profile.id).canonical }
@@ -84,5 +91,8 @@ import TunnelCore
             return ControlResponse(id: request.id, ok: false, profiles: profiles, error: (error as? UserError)?.message ?? "The requested operation could not be completed.")
         }
     }
-    func shutdown() { tunnel.stop(reason: "Companion app stopped. Firefox remains blocked until you disconnect.") }
+    func shutdown() {
+        tunnel.stop(reason: "Companion app stopped.")
+        ready = false; server = nil; store = nil; appLock = nil
+    }
 }

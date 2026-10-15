@@ -2,11 +2,13 @@
 
 A native macOS menu-bar app and Firefox extension that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
 
-## Native app and extension 0.2.0
+## Native app 0.2.1 / extension 0.2.0
 
 Both interfaces show the public exit IP and country flag, current-connection download/upload totals, tunnel DNS servers, and WireGuard client addresses. Firefox has a persistent **Kill switch**, on by default: detected failures block covered requests; switching it off permits normal browsing while the tunnel is unavailable. Direct browsing is clearly labelled.
 
-The first development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
+Native 0.2.1 fixes app relaunch after Quit and recovery when another copy is running. Background status checks do not launch the app; an explicit Firefox Connect can. A replacement app updates an existing Firefox registration after acquiring ownership.
+
+The development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
 
 This is a private development repository. Keep all commits suitable for possible public release: no personal references, real profiles, credentials, or machine-specific paths.
 

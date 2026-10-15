@@ -1,13 +1,14 @@
 # Validation record
 
-Native app and extension 0.2.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
+Native app 0.2.1 / extension 0.2.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
 
 ## Passed
 
 | Check | Evidence |
 | --- | --- |
 | Native release build and bundle | Swift compilation, app packaging, nested ad-hoc signatures, strict signature verification |
-| Native suite | 24 passing tests (including optional synthetic UI rendering) covering profile draft navigation, bare/prefixed interface addresses, configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
+| Native suite | 29 passing tests (including optional synthetic UI rendering) covering profile draft navigation, bare/prefixed interface addresses, configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
+| Upgrade lifecycle | Five regression tests cover failed-startup ownership release, second-copy repair and retry without altering stored metadata, registration refresh after ownership, no relaunch for status/disconnect, and bounded explicit-connect startup. The packaged helper also exits quietly on a changed registration before forwarding status or connect |
 | Profile editor state | Six tests cover Cancel preservation, failed Save preservation, Save before New, switching profiles only after Save, explicit Discard of imported drafts, and retaining selection after Save |
 | Keychain | Disposable entry written, read, updated, deleted; no real profile used |
 | Engine readiness | Temporary WireGuard peers establish a real handshake with a bare client interface address; app manager reports ready only afterwards; another client cannot take over; stop clears the port |

@@ -1,6 +1,6 @@
 # Install and try the development build
 
-Current native app and Firefox extension: 0.2.0. The native app version appears near the bottom of its menu-bar panel.
+Current native app: 0.2.1. Firefox extension: 0.2.0. The native app version appears near the bottom of its menu-bar panel.
 
 ## Build
 
@@ -27,7 +27,9 @@ The package declares macOS 13 as its minimum. Apple Silicon/macOS 27 with Swift 
 2. Choose **Install Firefox Integration** to register the helper for your macOS user.
 3. Choose **Manage Profiles…**, then **Import…**, or paste a configuration into a new profile and save it. Approve a Keychain prompt if shown.
 
-The app registers its current path. After moving it, reopen it and choose **Repair Firefox Integration**. Disconnect and quit before moving or replacing an app.
+The app registers its current path. Starting a replacement copy updates an existing registration once that copy has successfully started. **Repair Firefox Integration** also works when startup is blocked by another copy. Quit the other copy and choose **Retry Startup** to load the existing profiles; a blocked copy does not replace the profile list with an empty list.
+
+Background Firefox status checks do not launch the companion. Open the app to load profiles after quitting it; an explicit **Connect** can launch it when Firefox already has a selected profile. Disconnect and quit before moving or replacing an app.
 
 The **+** button starts a new profile; **Save Profile** saves the text currently being edited and keeps it selected. If there are unsaved changes, starting a new profile, switching to another profile, or importing asks **Save / Discard Changes / Cancel** first. A failed save leaves the current draft intact. Cancelling the file picker or choosing an invalid import also leaves the draft intact. Validation errors stay in the profile editor and clear when its name or configuration changes.
 
@@ -85,7 +87,11 @@ Details are not written to disk or extension storage. Old lookup results cannot 
 
 ## Updates and removal
 
-To update locally: disconnect in Firefox, quit the app, rebuild, and reopen. Reload the temporary extension in `about:debugging`; repair integration if the app moved. Ad-hoc signed rebuilds may prompt for Keychain access again. No automatic updater or login startup is implemented.
+To update locally: disconnect in Firefox, quit the app, rebuild, and reopen. Reload the temporary extension in `about:debugging` so it starts the current native helper. The replacement app refreshes an existing registration; use **Repair Firefox Integration** if necessary.
+
+**Upgrading from 0.2.0 or earlier:** temporarily disable the extension before quitting the old app. Those older helpers can relaunch their app during background checks. Open the replacement, repair integration if needed, and re-enable the extension. If the replacement was opened while the old copy was still running, quit the old copy and select **Retry Startup** in the replacement. This one-time workaround is needed because an already running old helper does not contain the lifecycle fix.
+
+Ad-hoc signed rebuilds may prompt for Keychain access again. No automatic updater or login startup is implemented.
 
 To remove: disconnect, delete profiles in the app to remove Keychain entries, quit, and remove the app and extension. These per-user files can then be removed:
 

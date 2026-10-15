@@ -72,7 +72,7 @@ Both interfaces show public exit IP with an approximate country flag, downloaded
 - Full-tunnel IPv4 is required. Optional IPv6 needs both an interface address and default route; its live path is unverified. Split profiles are rejected.
 - WebRTC is disabled while protected, so WebRTC calls will not work in that state.
 - One Firefox profile owns the tunnel, with a renewable 12-second lease. Other profiles cannot take over.
-- The bridge launches the app on demand. App quit/stop leaves covered Firefox requests blocked when the kill switch is on. Login startup is deferred.
+- Only an explicit Connect can launch the app; background status polling respects Quit. A blocked second copy can repair integration and retry startup after the owner quits. App quit/stop leaves covered Firefox requests blocked when the kill switch is on. Login startup is deferred.
 - wireproxy 1.1.3 archives and licence are checksum-pinned. Local app builds use ad-hoc signing; the extension is unsigned and temporarily loaded.
 - A recent handshake is the readiness signal, not proof of Internet reachability or complete containment.
 
