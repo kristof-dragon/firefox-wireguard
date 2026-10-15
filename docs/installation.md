@@ -1,6 +1,6 @@
 # Install and try the development build
 
-Current native app: 0.2.1. Firefox extension: 0.2.0. The native app version appears near the bottom of its menu-bar panel.
+Current native app: 0.2.1. Firefox extension: 0.2.1. The native app version appears near the bottom of its menu-bar panel.
 
 ## Build
 
@@ -15,7 +15,7 @@ scripts/build.sh
 This downloads checksum-verified wireproxy 1.1.3, builds the native programs, applies local ad-hoc signatures, and creates:
 
 - `dist/Firefox WireGuard.app`
-- `dist/firefox-wireguard-0.2.0-unsigned.xpi`
+- `dist/firefox-wireguard-0.2.1-unsigned.xpi`
 
 Set `FWG_OUTPUT_DIR` to build the app into a different folder without replacing an existing copy. The unsigned XPI still goes into `dist/`.
 
@@ -53,10 +53,14 @@ Split tunnels, multiple peers, DNS search domains, shell hooks, `Table`, proxy s
 
 ## Load the development extension
 
+Firefox 140 or later is required. On normal installation Firefox presents the
+built-in data-transmission consent for browsing traffic and the exit-IP country
+lookup. See [privacy.md](privacy.md).
+
 1. Visit `about:debugging` in Firefox.
 2. Choose **This Firefox → Load Temporary Add-on…**.
 3. Select `extension/manifest.json` in this checkout.
-4. In `about:addons`, find **Firefox WireGuard**, and set **Run in Private Windows → Allow**. This permission is needed for the browser-wide proxy setting even if you use only ordinary windows.
+4. In `about:addons`, find **WireGuard for Firefox**, and set **Run in Private Windows → Allow**. This permission is needed for the browser-wide proxy setting even if you use only ordinary windows.
 5. Open the extension from Firefox's extensions menu; pin it if desired.
 6. Close existing tabs and downloads. Choose a profile and **Connect**. A recent handshake and verified settings produce **Connected**.
 

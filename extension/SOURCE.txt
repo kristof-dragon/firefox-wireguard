@@ -1,0 +1,17 @@
+WireGuard for Firefox
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+All original extension files, including manifest.json and the icon, are
+covered by MPL-2.0. The complete licence is in LICENSE.
+
+This package contains the complete editable extension source. An XPI is
+a ZIP archive: unpack it to inspect or modify the JavaScript, HTML, CSS,
+SVG, and manifest. There is no minification, compilation, remote code,
+or bundled third-party JavaScript. The full project repository, including
+the macOS companion source, is linked from the add-on's listing.
+
+Firefox and WireGuard are trademarks of their respective owners.
+This is an independent project, not an official Mozilla or WireGuard app.

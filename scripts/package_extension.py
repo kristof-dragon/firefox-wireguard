@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
 """Build an unsigned XPI using an explicit source allowlist."""
 import json
 from pathlib import Path
@@ -13,4 +14,6 @@ files = ["manifest.json", "details.js", "controller.js", "background.js", "popup
 with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as package:
     for name in files:
         package.write(extension / name, name)
-print(f"Packaged {len(files)} extension files; unsigned development artifact.")
+    package.write(root / "LICENSE", "LICENSE")
+    package.write(extension / "SOURCE.txt", "SOURCE.txt")
+print(f"Packaged {len(files) + 2} extension files; unsigned submission artifact.")

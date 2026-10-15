@@ -1,6 +1,6 @@
 # Validation record
 
-Native app 0.2.1 / extension 0.2.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
+Native app 0.2.1 / extension 0.2.1, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
 
 ## Passed
 
@@ -22,6 +22,7 @@ Native app 0.2.1 / extension 0.2.0, checked 2026-10-15 on Apple Silicon, macOS 2
 | Connection details | Native/JavaScript tests validate metrics, flags, addresses, reset and stale-result handling; provider failure leaves a healthy tunnel connected. Real Firefox renders synthetic details from an isolated native host; native SwiftUI card rendered and visually checked |
 | Exit lookup path | A local SOCKS fixture receives the provider hostname and HTTPS port; a proxy refusal fails the lookup. No external service or deployment keys are used by automated tests |
 | Real Firefox disconnect | Explicit disconnect restores access to the same directly reachable fixture |
+| Publication package | Exact ten-file XPI contents checked; web-ext 10.8.0 reports zero errors and one Android-only minimum-version warning. Submission targets macOS desktop. MPL notices, privacy declaration, and synthetic preview verified; see [publication audit](publication-audit.md) |
 
 The browser failure fixture uses a reserved hostname mapped locally by the test profile. It proves request blocking/restoration, not remote DNS or Internet routing. The browser and encrypted backend paths have been tested separately. Manual browser-to-remote-server use has been reported working; it has not been independently verified with traffic captures. The new public-IP display has synthetic response and SOCKS transport coverage, but a live provider response through a remote tunnel remains to be checked.
 
@@ -57,7 +58,7 @@ The `--launch-services` option works around Firefox profile-launch trouble on ma
 - Real app crashes, sleep/wake, interface changes, stale leases, and profile switching need broader browser-level testing. Supervisor stop and modeled controller failures were tested.
 - Other local processes may connect to the unauthenticated loopback SOCKS listener. Same-user processes are not isolated by the control socket's UID check.
 - Endpoint hostname resolution and WireGuard transport setup use the host network. Proxy destination DNS is intended to use configured tunnel DNS; comprehensive leakage measurements remain pending.
-- Intel, macOS 13–26, and Firefox 128–156 are declared targets but have not been tested here.
+- Intel, macOS 13–26, and Firefox 140–156 are declared targets but have not been tested here.
 - The native UI compiles and the app launches; the full profile editor workflow has not been exercised through UI automation. Profile persistence/parser/Keychain operations have automated coverage.
 - Public-IP provider availability, country accuracy, and shared-exit rate limiting need live verification. Lookup failure does not imply tunnel failure.
-- No notarization, Mozilla signing, automatic updates, login startup, or public licence decision is included.
+- No notarization, Mozilla signing, automatic updates, or login startup is included. MPL-2.0 covers the original source.

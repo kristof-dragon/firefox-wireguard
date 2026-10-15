@@ -24,5 +24,6 @@ outside local development.
 
 The Swift application, messaging bridge, and Firefox extension were written for
 this project. No code from the related Wireguard-Browser-Extension prototype has
-been copied. A licence for this project's original code remains a public-release
-decision.
+been copied. The original project source, documentation, and assets are licensed under
+MPL-2.0; see LICENSE. This does not change the licences of wireproxy or its
+dependencies. The Firefox XPI contains no third-party code or native binaries.

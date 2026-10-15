@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import XCTest
 import Darwin
 @testable import TunnelCore

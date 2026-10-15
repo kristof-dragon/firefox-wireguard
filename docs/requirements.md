@@ -76,4 +76,4 @@ Both interfaces show public exit IP with an approximate country flag, downloaded
 - wireproxy 1.1.3 archives and licence are checksum-pinned. Local app builds use ad-hoc signing; the extension is unsigned and temporarily loaded.
 - A recent handshake is the readiness signal, not proof of Internet reachability or complete containment.
 
-The public project licence, signed extension distribution, binary redistribution review, split-routing policy, and update hosting remain open. These requirements describe intended protection scope; [validation.md](validation.md) distinguishes tested checks from unverified release gates.
+Original project files are licensed under MPL-2.0. Extension 0.2.1 raises the Firefox minimum to 140 for built-in data consent and uses the display name WireGuard for Firefox. Signed extension distribution, binary redistribution review, split-routing policy, and update hosting remain open. These requirements describe intended protection scope; [validation.md](validation.md) distinguishes tested checks from unverified release gates.

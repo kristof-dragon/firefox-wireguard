@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
 """Download only a pinned, checksum-verified upstream backend into ignored storage."""
 import hashlib
 import io

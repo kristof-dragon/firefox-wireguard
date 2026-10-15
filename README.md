@@ -2,7 +2,7 @@
 
 A native macOS menu-bar app and Firefox extension that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
 
-## Native app 0.2.1 / extension 0.2.0
+## Native app 0.2.1 / extension 0.2.1
 
 Both interfaces show the public exit IP and country flag, current-connection download/upload totals, tunnel DNS servers, and WireGuard client addresses. Firefox has a persistent **Kill switch**, on by default: detected failures block covered requests; switching it off permits normal browsing while the tunnel is unavailable. Direct browsing is clearly labelled.
 
@@ -10,7 +10,7 @@ Native 0.2.1 fixes app relaunch after Quit and recovery when another copy is run
 
 The development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
 
-This is a private development repository. Keep all commits suitable for possible public release: no personal references, real profiles, credentials, or machine-specific paths.
+This project is open source under the [Mozilla Public License 2.0](LICENSE). The Firefox add-on is named **WireGuard for Firefox**; the native companion keeps its existing name and identifiers.
 
 ## Try it
 
@@ -54,7 +54,7 @@ python3 scripts/backend_integration.py
 
 Opt-in tests use disposable Keychain entries and locally generated WireGuard peers. Backend downloads are pinned to wireproxy 1.1.3 with verified archive and licence checksums. Build products, logs, and browser profiles are ignored by Git.
 
-Declared minimums are macOS 13 and Firefox 128. The build was tested on Apple Silicon with macOS 27 and Firefox 157. Intel backend download support is included, but an Intel build has not been tested.
+Declared minimums are macOS 13 and Firefox 140. The build was tested on Apple Silicon with macOS 27 and Firefox 157. Intel backend download support is included, but an Intel build has not been tested.
 
 ## Project documents
 
@@ -66,5 +66,10 @@ Declared minimums are macOS 13 and Firefox 128. The build was tested on Apple Si
 - [Upstream references and distribution](docs/references.md)
 - [Contribution and publication hygiene](CONTRIBUTING.md)
 - [Third-party provenance](THIRD_PARTY.md)
+- [Privacy and data transmission](docs/privacy.md)
+- [Firefox listing and reviewer information](docs/firefox-submission.md)
+- [Public-source audit](docs/publication-audit.md)
 
-The app and extension are original code. No code was copied from the referenced browser-extension prototype. A public project licence and binary redistribution review remain release decisions.
+All original source, documentation, and assets are licensed under MPL-2.0, including files without inline notices such as the extension manifest. Third-party components retain their own licences; see [THIRD_PARTY.md](THIRD_PARTY.md). No code was copied from the referenced browser-extension prototype. Native binary redistribution review remains pending.
+
+Firefox and WireGuard are trademarks of their respective owners. This is an independent project, not an official Mozilla or WireGuard application.

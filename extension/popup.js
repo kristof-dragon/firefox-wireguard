@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 "use strict";
 const byID = id => document.getElementById(id);
 let running = false;

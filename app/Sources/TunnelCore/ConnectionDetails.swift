@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import Foundation
 
 /// Non-secret connection information. Kept in memory, never persisted or logged.

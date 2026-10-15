@@ -35,7 +35,7 @@ Do not infer complete leak prevention from a public-IP page or existing automate
 
 ## Installation hardening
 
-- Obtain Mozilla unlisted signing for persistent ordinary-Firefox installation.
+- Submit the extension for Mozilla signing and public AMO listing.
 - Validate fresh installs, upgrades, removal, Intel, and declared minimum versions.
 - Add optional login startup; consider notarization and an installer for wider distribution.
 - Evaluate local SOCKS authentication if exclusive proxy access is needed.
@@ -44,6 +44,6 @@ Do not infer complete leak prevention from a public-IP page or existing automate
 
 Choose an explicit out-of-route policy before adding split tunnels. Expand configuration compatibility without executable hooks. Add useful diagnostics without exposing profiles. Determine whether stronger containment needs separate OS enforcement.
 
-## Public release decision
+## Public source and Firefox submission
 
-Keep the repository private until explicitly approved. Review all history for private material, choose a project licence, review transitive licences for binary redistribution, verify artifacts, and align claims with measured coverage. Signing credentials and real configurations remain outside Git.
+MPL-2.0 is the licence for original project files. Review all history and release artifacts for private material before publication. The Firefox 0.2.1 submission includes built-in data consent, privacy disclosures, and reviewer instructions. Native binary redistribution still requires a transitive notice/source-offer review and distribution signing decisions. Signing credentials and real configurations remain outside Git. Chrome development is deferred.

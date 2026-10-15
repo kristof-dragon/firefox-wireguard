@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
 """Exercise the actual extension in a disposable Firefox profile.
 
 Pass the path to a Mozilla geckodriver executable. Start the packaged companion
@@ -171,10 +172,10 @@ try:
     execute("gBrowser.selectedBrowser.loadURI(Services.io.newURI(arguments[0]), {triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()});", [f"moz-extension://{extension_uuid}/popup.html"])
     api(f"/session/{session}/moz/context", {"context": "content"})
     for _ in range(30):
-        if execute("return document.querySelector('h1')?.textContent") == "Firefox WireGuard":
+        if execute("return document.querySelector('h1')?.textContent") == "WireGuard for Firefox":
             break
         time.sleep(0.1)
-    assert execute("return document.querySelector('h1').textContent") == "Firefox WireGuard"
+    assert execute("return document.querySelector('h1').textContent") == "WireGuard for Firefox"
     state = message("refresh")
     assert state and state["ready"] and not state["desired"] and not state["error"], state
     print("PASS: actual Firefox extension reached the isolated fixture host." if args.fixture_native else "PASS: actual Firefox extension reached the real companion through native messaging.", flush=True)

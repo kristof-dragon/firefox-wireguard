@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: MPL-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export CLANG_MODULE_CACHE_PATH="$PWD/.build/module-cache"
@@ -13,6 +14,7 @@ cp "$bin_dir/firefox-wireguard-bridge" "$app_dir/Contents/MacOS/firefox-wireguar
 cp vendor/bin/wireproxy "$app_dir/Contents/Resources/wireproxy"
 cp vendor/bin/wireproxy-LICENSE "$app_dir/Contents/Resources/wireproxy-LICENSE"
 cp THIRD_PARTY.md "$app_dir/Contents/Resources/THIRD_PARTY.md"
+cp LICENSE "$app_dir/Contents/Resources/LICENSE"
 cp packaging/Info.plist "$app_dir/Contents/Info.plist"
 # Local development signing only; no Apple account, certificate, or personal
 # signing identity is embedded. Distributed notarized builds are a later step.

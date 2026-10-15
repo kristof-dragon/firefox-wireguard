@@ -1,6 +1,6 @@
 # Architecture
 
-This describes native app 0.1.1 and extension 0.1.0. Validation scope is recorded separately in [validation.md](validation.md).
+This describes native app 0.2.1 and extension 0.2.1. Validation scope is recorded separately in [validation.md](validation.md).
 
 ## Native app and secrets
 
@@ -54,6 +54,6 @@ Proxy changes do not guarantee closure of existing connections. Close existing t
 
 The app owns a single public-IP lookup task per connection. After a healthy handshake and every five minutes, fixed system curl requests `https://ipwho.is/?fields=success,ip,country_code` through `socks5h://127.0.0.1:<session-port>`. Curl configuration files and environment proxy overrides are disabled; bypass lists are empty, HTTPS/TLS verification is required, redirects are not followed, and response/time limits apply. No direct/system-resolver fallback is configured. Stop, reconnect, and unhealthy state cancel the task and invalidate its result generation. A provider failure affects only the display.
 
-DNS/client addresses come from the validated configuration without keys or endpoint information. Public response IPs and country codes are validated; flags are generated locally without remote images. All display fields remain in memory, shared through the existing native channel. Firefox copies only known display fields and clears them on transport loss, disconnect, or profile change. No new extension permissions, analytics, or persistent IP history were added.
+DNS/client addresses come from the validated configuration without keys or endpoint information. Public response IPs and country codes are validated; flags are generated locally without remote images. All display fields remain in memory, shared through the existing native channel. Firefox copies only known display fields and clears them on transport loss, disconnect, or profile change. No analytics or persistent IP history are implemented. Extension 0.2.1 declares the required data categories in the Firefox 140+ built-in consent prompt; see [privacy.md](privacy.md).
 
 Public distribution should review provider terms, availability, shared-exit rate limits, and Mozilla privacy disclosures. The free service is an external dependency; there is no private API credential in the app.

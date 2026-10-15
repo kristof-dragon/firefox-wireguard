@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 "use strict";
 let controller;
 const native = new FirefoxWG.NativeClient(browser, () => controller?.transportLost());
@@ -5,7 +6,7 @@ controller = new FirefoxWG.Controller(browser, native, state => {
   const text = !state.desired ? "" : state.directFallback ? "OFF" : state.phase === "connected" ? "ON" : "!";
   browser.browserAction.setBadgeText({text});
   browser.browserAction.setBadgeBackgroundColor({color: state.phase === "connected" ? "#247653" : "#ad462b"});
-  browser.browserAction.setTitle({title: `Firefox WireGuard — ${state.directFallback ? "browsing directly (kill switch off)" : state.phase}`});
+  browser.browserAction.setTitle({title: `WireGuard for Firefox — ${state.directFallback ? "browsing directly (kill switch off)" : state.phase}`});
 });
 browser.proxy.onRequest.addListener(details => controller.route(details), {urls: ["<all_urls>"]});
 browser.webRequest.onBeforeRequest.addListener(details => controller.guard(details), {urls: ["<all_urls>"]}, ["blocking"]);

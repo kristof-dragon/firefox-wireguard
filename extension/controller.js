@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /* This module is shared by the Firefox background page and the lifecycle tests. */
 "use strict";
 (function (root) {

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 :root { color-scheme: light dark; font: 13px system-ui, sans-serif; --accent: #216d53; --surface: #f5f7f6; --text: #20302c; --muted: #64716c; --line: #d8e0dc; }
 * { box-sizing: border-box; }
 body { width: 340px; margin: 0; color: var(--text); background: var(--surface); }

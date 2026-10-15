@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
 """A local encrypted WireGuard round trip; no system VPN or real credentials.
 
 Requires the packaged app, Python 3, and OpenSSL with X25519 support. All keys

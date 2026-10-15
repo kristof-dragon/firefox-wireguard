@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: MPL-2.0
 """Disposable browser-test host. Synthetic display data only; no real tunnel."""
 import json
 import struct

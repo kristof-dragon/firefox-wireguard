@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import XCTest
 @testable import TunnelCore
 @testable import MenuBarApp
