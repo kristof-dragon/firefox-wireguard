@@ -8,7 +8,7 @@ Both interfaces show the public exit IP and country flag, current-connection dow
 
 Native 0.2.1 fixes app relaunch after Quit and recovery when another copy is running. Background status checks do not launch the app; an explicit Firefox Connect can. A replacement app updates an existing Firefox registration after acquiring ownership.
 
-The development version is implemented and builds locally. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
+An Apple Silicon preview is available as a ready-to-run Mac download. It includes profile import/editing, Keychain storage, a native messaging bridge, a userspace WireGuard backend, and the Firefox profile picker. The encrypted proxy path and browser failure handling have been exercised locally. Manual remote browsing has been reported working; the full browser leak-testing matrix remains to be validated. See [test evidence and limitations](docs/validation.md).
 
 This project is open source under the [Mozilla Public License 2.0](LICENSE). The Firefox add-on is named **WireGuard for Firefox**; the native companion keeps its existing name and identifiers.
 
@@ -18,13 +18,13 @@ See the [submission record](docs/firefox-submission.md#submission-record).
 
 ## Try it
 
-1. Run `scripts/build.sh` on a Mac with a Swift toolchain and Python 3.
-2. Open `dist/Firefox WireGuard.app`. Its shield icon appears in the menu bar.
+1. [Download Firefox WireGuard 0.2.1 for Apple Silicon](https://github.com/kristof-dragon/firefox-wireguard/releases/download/v0.2.1/Firefox-WireGuard-0.2.1-macOS-arm64.zip), unzip it, and move **Firefox WireGuard.app** to **Applications**. No developer tools, Docker, or separate WireGuard installation are needed.
+2. Open the app. This preview is ad-hoc signed and **not notarized by Apple**. If macOS blocks it, follow the [first-launch instructions](docs/installation.md#download-the-mac-app). Its shield icon appears in the menu bar.
 3. Choose **Install Firefox Integration**, then **Manage Profiles…** to import a supported full-tunnel configuration.
 4. Temporarily load `extension/manifest.json` using Firefox's `about:debugging` page. Allow the extension in private windows.
 5. Close existing tabs and downloads, then select a profile and **Connect** in the extension.
 
-[Installation, supported configurations, updates, and removal](docs/installation.md) has the complete steps. The local app is ad-hoc signed; the extension package is unsigned. Persistent installation in ordinary Firefox needs Mozilla signing, but no public add-on listing.
+[Installation, supported configurations, updates, and removal](docs/installation.md) has the complete steps. The [GitHub release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1) includes checksums and matching source. The Firefox add-on is still awaiting Mozilla review; a downloaded Mac app does not replace the extension. Once approved, install it from the [Mozilla listing](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/).
 
 ## Behaviour
 
@@ -56,7 +56,7 @@ FWG_TEST_KEYCHAIN=1 FWG_TEST_BACKEND=1 scripts/test.sh
 python3 scripts/backend_integration.py
 ```
 
-Opt-in tests use disposable Keychain entries and locally generated WireGuard peers. Backend downloads are pinned to wireproxy 1.1.3 with verified archive and licence checksums. Build products, logs, and browser profiles are ignored by Git.
+Opt-in tests use disposable Keychain entries and locally generated WireGuard peers. Local development downloads a checksum-verified wireproxy 1.1.3 binary. Public app releases rebuild the same version from verified source, remove build paths, and bundle reviewed third-party licences; see [Mac release packaging](docs/macos-releases.md). Build products, logs, and browser profiles are ignored by Git.
 
 Declared minimums are macOS 13 and Firefox 140. The build was tested on Apple Silicon with macOS 27 and Firefox 157. Intel backend download support is included, but an Intel build has not been tested.
 
@@ -74,6 +74,6 @@ Declared minimums are macOS 13 and Firefox 140. The build was tested on Apple Si
 - [Firefox listing and reviewer information](docs/firefox-submission.md)
 - [Public-source audit](docs/publication-audit.md)
 
-All original source, documentation, and assets are licensed under MPL-2.0, including files without inline notices such as the extension manifest. Third-party components retain their own licences; see [THIRD_PARTY.md](THIRD_PARTY.md). No code was copied from the referenced browser-extension prototype. Native binary redistribution review remains pending.
+All original source, documentation, and assets are licensed under MPL-2.0, including files without inline notices such as the extension manifest. Third-party components retain their own licences; see [THIRD_PARTY.md](THIRD_PARTY.md). No code was copied from the referenced browser-extension prototype.
 
 Firefox and WireGuard are trademarks of their respective owners. This is an independent project, not an official Mozilla or WireGuard application.

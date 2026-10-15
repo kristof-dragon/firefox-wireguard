@@ -20,7 +20,9 @@ final class EngineTests: XCTestCase {
             throw XCTSkip("Build the app and set FWG_TEST_BACKEND=1 to run the local WireGuard engine test.")
         }
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let contents = root.appendingPathComponent("dist/Firefox WireGuard.app/Contents")
+        let app = ProcessInfo.processInfo.environment["FWG_TEST_APP"].map { URL(fileURLWithPath: $0) }
+            ?? root.appendingPathComponent("dist/Firefox WireGuard.app")
+        let contents = app.appendingPathComponent("Contents")
         let backend = contents.appendingPathComponent("Resources/wireproxy")
         let helper = contents.appendingPathComponent("MacOS/firefox-wireguard-bridge")
         guard FileManager.default.isExecutableFile(atPath: backend.path) else { return XCTFail("Build the app first.") }

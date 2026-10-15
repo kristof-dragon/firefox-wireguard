@@ -1,8 +1,33 @@
-# Install and try the development build
+# Install and try the preview
 
 Current native app: 0.2.1. Firefox extension: 0.2.1. The native app version appears near the bottom of its menu-bar panel.
 
-## Build
+## Download the Mac app
+
+The [0.2.1 GitHub release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1)
+provides **Firefox-WireGuard-0.2.1-macOS-arm64.zip** for **Apple Silicon Macs**
+(M-series, macOS 13 or later). No build tools are required. Intel downloads are
+not available yet. Testing was on macOS 27; older supported macOS versions remain
+unverified.
+
+1. Download the app ZIP from the release's **Assets**, then double-click to unzip.
+2. Move **Firefox WireGuard.app** into **Applications** (or your user Applications
+   folder) before opening it, so Firefox can keep a stable registration path.
+3. Open the app. This preview is ad-hoc signed, **not Developer ID signed or
+   notarized by Apple**. If macOS says the developer cannot be verified or Apple
+   cannot check it, and you trust this release, open **System Settings → Privacy
+   & Security → Open Anyway**, then confirm **Open**. See Apple's
+   [first-launch guidance](https://support.apple.com/en-us/102445).
+4. Continue with **Set up the app** below. The shield icon is in the menu bar;
+   there is no Dock window to keep open. Relaunch it from Applications after Quit.
+
+The release includes **SHA256SUMS.txt** and matching source. The native app still
+requires the Firefox extension. Version 0.2.1 is awaiting Mozilla review; use the
+temporary development method below until the
+[Mozilla listing](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/)
+offers an approved installation. Building from source remains optional.
+
+## Build from source (optional)
 
 Use a Mac with Swift 5.9 or later, the macOS SDK, and Python 3. Xcode or compatible command-line developer tools must be selected. Node.js 20 or later is needed for tests, not for running the app.
 
@@ -23,7 +48,7 @@ The package declares macOS 13 as its minimum. Apple Silicon/macOS 27 with Swift 
 
 ## Set up the app
 
-1. Put the app where you want to keep it, then open it. The shield icon appears in the menu bar. A locally built copy needs no Apple signing account; this is not a notarized downloadable release.
+1. Put the app where you want to keep it, then open it. The shield icon appears in the menu bar. The downloadable preview and local builds use ad-hoc signing; neither is notarized.
 2. Choose **Install Firefox Integration** to register the helper for your macOS user.
 3. Choose **Manage Profiles…**, then **Import…**, or paste a configuration into a new profile and save it. Approve a Keychain prompt if shown.
 
@@ -68,7 +93,7 @@ Localhost remains reachable. Other private IPs use the tunnel. WebRTC calling is
 
 If the list is empty, create a profile in the app and click **Refresh**. If the helper is unavailable, open the app and repair integration. If a Keychain prompt delayed a request, answer it and reconnect. Other proxy/privacy extensions or managed browser policies may prevent necessary settings from being applied.
 
-Temporary add-ons disappear on Firefox restart. The unsigned XPI cannot be permanently installed in standard release Firefox. Mozilla supports signed, unlisted self-distribution, requiring an AMO account and submission but no public listing. Signing has not been performed. See Mozilla's [temporary installation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) and [signing and distribution](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) instructions.
+Temporary add-ons disappear on Firefox restart. The unsigned XPI cannot be permanently installed in standard release Firefox. The public 0.2.1 submission is awaiting Mozilla review; see the [submission record](firefox-submission.md). Mozilla also supports signed, unlisted self-distribution. See Mozilla's [temporary installation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) and [signing and distribution](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) instructions.
 
 ## Kill switch
 
@@ -91,7 +116,11 @@ Details are not written to disk or extension storage. Old lookup results cannot 
 
 ## Updates and removal
 
-To update locally: disconnect in Firefox, quit the app, rebuild, and reopen. Reload the temporary extension in `about:debugging` so it starts the current native helper. The replacement app refreshes an existing registration; use **Repair Firefox Integration** if necessary.
+To update: disconnect in Firefox, quit the app, replace it with the new download
+in the same Applications folder, and reopen. For local builds, rebuild instead.
+Reload a temporary extension in `about:debugging` so it starts the current native
+helper. The replacement app refreshes an existing registration; use **Repair
+Firefox Integration** if necessary.
 
 **Upgrading from 0.2.0 or earlier:** temporarily disable the extension before quitting the old app. Those older helpers can relaunch their app during background checks. Open the replacement, repair integration if needed, and re-enable the extension. If the replacement was opened while the old copy was still running, quit the old copy and select **Retry Startup** in the replacement. This one-time workaround is needed because an already running old helper does not contain the lifecycle fix.
 

@@ -17,7 +17,7 @@ import time
 import urllib.request
 
 root = Path(__file__).resolve().parents[1]
-contents = root / "dist" / "Firefox WireGuard.app" / "Contents"
+contents = Path(os.environ.get("FWG_TEST_APP", root / "dist" / "Firefox WireGuard.app")) / "Contents"
 backend = contents / "Resources" / "wireproxy"
 supervisor = contents / "MacOS" / "firefox-wireguard-bridge"
 if not backend.is_file() or not supervisor.is_file():

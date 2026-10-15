@@ -48,10 +48,13 @@ WireGuard for Firefox connects Firefox to profiles configured in the separate
 Firefox WireGuard menu-bar app for macOS. It leaves the Mac's system routes and
 DNS settings unchanged. No Docker or official WireGuard app is needed.
 
-**Requires macOS, the separately built native companion, and a supported
-full-tunnel WireGuard configuration.** This preview currently requires building
-the companion from the public source repository with Swift and Python. It is
-not a one-click VPN service and does not include a notarized app download.
+**Requires macOS, the separate native companion, and a supported full-tunnel
+WireGuard configuration.** Download the ready-to-run Apple Silicon companion
+from the [0.2.1 GitHub release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1).
+No developer tools are needed. The app requires macOS 13 or later and is ad-hoc
+signed, not notarized by Apple; macOS may require Privacy & Security → Open Anyway
+on first launch. Intel users must build from source; Intel builds are untested.
+This is not a VPN service and no server or subscription is included.
 
 Select a profile, connect, and see the public exit IP with country flag, uploaded
 and downloaded session totals, configured tunnel DNS, and client WireGuard IPs.
@@ -119,11 +122,14 @@ keys or using a real deployment. On macOS:
    kill switch, and display fields. It does not touch an existing app/profile.
 
 The browser fixture and real encrypted backend checks are separate; the fixture
-does not itself establish a WireGuard tunnel. To test remote browsing, build/open
+does not itself establish a WireGuard tunnel. To test remote browsing, download/open
 the companion, install its Firefox integration, import a dedicated authorised
 full-tunnel peer, allow the add-on in private windows, and connect. See the
 complete installation and validation documents for coverage and limitations.
 
-Native app source, build scripts, and pinned backend provenance are in the
-public repository. Native binary redistribution and notarization are separate
-release work; this submission distributes only the extension.
+The Apple Silicon native app is downloadable from the public repository's
+0.2.1 release, with matching source, checksums, and third-party notices. It is
+ad-hoc signed and not notarized. The XPI remains extension-only; its contents
+have not changed since submission. The full-project archive originally attached
+to Mozilla describes the pre-download packaging; the native release includes
+its own exact source revision.
