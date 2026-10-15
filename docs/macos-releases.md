@@ -6,6 +6,25 @@ userspace WireGuard engine. Only macOS system libraries are dynamically linked.
 The app declares macOS 13 as its minimum; testing was on macOS 27. No Intel or
 universal binary is published yet.
 
+## Published 0.2.1 preview
+
+Published on 2026-10-15 at the
+[v0.2.1 release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1),
+from commit `99cc4657d700247dd9f0f2c1881c2b0554fb0cd6`.
+
+| Asset | Size | SHA-256 |
+| --- | ---: | --- |
+| Mac arm64 app ZIP | 4,190,172 bytes | `d3d43ee069736075d966ec9a3a0b844480ce26c8453530706bae88a98030cd0e` |
+| Matching project source ZIP | 276,330 bytes | `982651a5fbe6755d084e66e239b8ff246b18ef6e28915d9f7559451fc3dbdb38` |
+
+Both ZIPs and `SHA256SUMS.txt` were downloaded anonymously from GitHub after
+publication and matched the local verified files. The app ZIP contains 40 files,
+including the three executables, licences, source notices, and build provenance.
+Its re-extracted bundle passed strict nested signature verification and the
+real encrypted transport, no-direct-fallback, and supervisor cleanup checks.
+The release engine/helper also passed the native lifecycle tests; the full
+29-native/23-extension suite passed. No real WireGuard profile was used.
+
 ## Signing and installation
 
 The app and nested executables have ad-hoc signatures for local code integrity.

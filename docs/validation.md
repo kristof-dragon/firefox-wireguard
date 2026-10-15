@@ -23,6 +23,7 @@ Native app 0.2.1 / extension 0.2.1, checked 2026-10-15 on Apple Silicon, macOS 2
 | Exit lookup path | A local SOCKS fixture receives the provider hostname and HTTPS port; a proxy refusal fails the lookup. No external service or deployment keys are used by automated tests |
 | Real Firefox disconnect | Explicit disconnect restores access to the same directly reachable fixture |
 | Publication package | Exact ten-file XPI contents checked; web-ext 10.8.0 reports zero errors and one Android-only minimum-version warning. Submission targets macOS desktop. MPL notices, privacy declaration, and synthetic preview verified; see [publication audit](publication-audit.md) |
+| Downloadable Mac app | Source-built wireproxy with pinned module/licence inventory; no home-directory paths; system-library dependencies only. Final ZIP re-extracted and signatures verified; its actual engine/helper passed encrypted transport and failure/cleanup checks. Anonymous GitHub downloads matched SHA-256 values; see [release evidence](macos-releases.md#published-021-preview) |
 
 The browser failure fixture uses a reserved hostname mapped locally by the test profile. It proves request blocking/restoration, not remote DNS or Internet routing. The browser and encrypted backend paths have been tested separately. Manual browser-to-remote-server use has been reported working; it has not been independently verified with traffic captures. The new public-IP display has synthetic response and SOCKS transport coverage, but a live provider response through a remote tunnel remains to be checked.
 

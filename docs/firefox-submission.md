@@ -22,6 +22,13 @@ Mozilla will notify the publisher when review/publication completes.
 Check the Developer Hub for current status; the record above describes the
 submission date and does not imply subsequent approval.
 
+On 2026-10-15, after publishing the Apple Silicon companion to GitHub, the AMO
+description, version notes, and reviewer notes were updated with the download
+link, macOS requirements, and ad-hoc/non-notarized signing status. The saved
+version page still showed **Awaiting Review**. The XPI and attached original
+source were not replaced; all ten XPI file contents match the original submission
+source. See [Mac release verification](macos-releases.md#published-021-preview).
+
 ## Listing
 
 - Name: **WireGuard for Firefox**
