@@ -7,9 +7,9 @@ Version 0.1.0, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox
 | Check | Evidence |
 | --- | --- |
 | Native release build and bundle | Swift compilation, app packaging, nested ad-hoc signatures, strict signature verification |
-| Native suite | 10 passing tests covering configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
+| Native suite | 12 passing tests covering bare/prefixed interface addresses, configuration rejection, secret-free metadata, corrupt indexes, framing, socket exchange, Keychain, and real engine lifecycle |
 | Keychain | Disposable entry written, read, updated, deleted; no real profile used |
-| Engine readiness | Temporary WireGuard peers establish a real handshake; app manager reports ready only afterwards; another client cannot take over; stop clears the port |
+| Engine readiness | Temporary WireGuard peers establish a real handshake with a bare client interface address; app manager reports ready only afterwards; another client cannot take over; stop clears the port |
 | Extension suite | 15 passing tests covering startup guards, localhost, connection ordering, private-window permission, failure, stale readiness, settings conflicts/restoration, and helper timeout recovery |
 | Encrypted backend path | Packaged supervisor and wireproxy send an HTTP request through SOCKS and an encrypted loopback WireGuard peer to a virtual destination |
 | Backend failure | Unreachable proxy destination does not use the host's direct listener; stopping supervisor closes the backend proxy |

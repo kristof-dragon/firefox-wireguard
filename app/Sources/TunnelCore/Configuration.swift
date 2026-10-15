@@ -58,7 +58,14 @@ public struct TunnelConfiguration {
         try validateKey(require(peer, "PublicKey"))
         if let key = peer["PresharedKey"] { try validateKey(key) }
         let addresses = try Self.list(require(interface, "Address"))
-        for address in addresses { guard Self.validCIDR(address) else { throw UserError("Address must contain IP addresses with valid prefix lengths.") } }
+        // WireGuard's Apple client and wireproxy both accept bare interface IPs.
+        // Preserve the input form; explicit prefixes must still be valid. This
+        // does not relax AllowedIPs, which remains a routing-prefix list below.
+        for address in addresses {
+            guard Self.isIP(address) || Self.validCIDR(address) else {
+                throw UserError("Address must contain valid IP addresses, optionally followed by /prefix (IPv4: 0–32; IPv6: 0–128).")
+            }
+        }
         let has4 = addresses.contains { !$0.contains(":") }, has6 = addresses.contains { $0.contains(":") }
         guard has4 else { throw UserError("This first version requires an IPv4 interface address.") }
         let dns = try Self.list(require(interface, "DNS"))

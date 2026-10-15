@@ -47,6 +47,27 @@ final class CoreTests: XCTestCase {
             .replacingOccurrences(of: "0.0.0.0/0", with: "0.0.0.0/0, ::/0")
         XCTAssertTrue(try TunnelConfiguration(dual).supportsIPv6)
     }
+    func testInterfaceAddressesAcceptBareAndPrefixedForms() throws {
+        for address in ["192.0.2.2", "192.0.2.2/32", "192.0.2.2/24"] {
+            let config = try TunnelConfiguration(fixture().replacingOccurrences(of: "192.0.2.2/32", with: address))
+            XCTAssertFalse(config.supportsIPv6)
+            XCTAssertTrue(config.backendConfig(proxyPort: 9999, healthPort: 9998).contains("Address = \(address)\n"))
+        }
+        for addresses in ["192.0.2.2, 2001:db8::2", "192.0.2.2/32, 2001:db8::2", "192.0.2.2, 2001:db8::2/64"] {
+            let text = fixture().replacingOccurrences(of: "192.0.2.2/32", with: addresses)
+                .replacingOccurrences(of: "0.0.0.0/0", with: "0.0.0.0/0, ::/0")
+            let config = try TunnelConfiguration(text)
+            XCTAssertTrue(config.supportsIPv6)
+            XCTAssertTrue(config.canonical.contains("Address = \(addresses)\n"))
+        }
+    }
+    func testOptionalInterfacePrefixesDoNotAdmitMalformedAddressesOrRoutes() throws {
+        for address in ["192.0.2.999", "192.0.2.2/", "192.0.2.2/-1", "192.0.2.2/33", "192.0.2.2/32/1", "192.0.2.2, 2001:db8::2/129", "host.example.invalid"] {
+            XCTAssertThrowsError(try TunnelConfiguration(fixture().replacingOccurrences(of: "192.0.2.2/32", with: address)))
+        }
+        XCTAssertThrowsError(try TunnelConfiguration(fixture().replacingOccurrences(of: "0.0.0.0/0", with: "0.0.0.0")))
+        XCTAssertThrowsError(try TunnelConfiguration(fixture().replacingOccurrences(of: "0.0.0.0/0", with: "0.0.0.0/0, 192.0.2.1")))
+    }
     func testParserRejectsInvalidValuesWithoutReflectingSecrets() throws {
         let secret = "NOT-A-REAL-KEY-DO-NOT-REFLECT"
         let text = fixture().replacingOccurrences(of: Data(repeating: 7, count: 32).base64EncodedString(), with: secret)

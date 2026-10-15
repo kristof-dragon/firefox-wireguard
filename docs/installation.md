@@ -32,7 +32,7 @@ Use a WireGuard server you control or are authorised to use. Internet browsing r
 Version 0.1 supports:
 
 - Exactly one `[Interface]` and one `[Peer]`.
-- Required interface `PrivateKey`, `Address`, and `DNS`: an IPv4 address with prefix length and one or more IP-literal DNS servers.
+- Required interface `PrivateKey`, `Address`, and `DNS`: an IPv4 address and one or more IP-literal DNS servers. Interface addresses may be bare IPs or include a valid prefix, for example `192.0.2.2` or `192.0.2.2/32`. `AllowedIPs` still requires routing prefixes.
 - Required peer `PublicKey`, `Endpoint`, and `AllowedIPs`, including `0.0.0.0/0`.
 - Optional `PresharedKey` and `MTU` (1280–9000).
 - Optional IPv6 only with both an IPv6 interface address and `::/0`. Live IPv6 testing is pending.

@@ -6,6 +6,7 @@ These links are design inputs. Their code, binaries, and instructions are not au
 
 - [wireproxy](https://github.com/windtf/wireproxy): initial userspace WireGuard backend, pinned to version 1.1.3.
 - [WireGuard](https://www.wireguard.com/): protocol and configuration background.
+- [WireGuard Apple address parser](https://github.com/WireGuard/wireguard-apple/blob/master/Sources/WireGuardKit/IPAddressRange.swift) and [wireproxy 1.1.3 parser](https://github.com/windtf/wireproxy/blob/v1.1.3/config.go): both accept interface addresses without an explicit prefix. The app accepts this form while retaining its full-tunnel route checks.
 - [Wireguard-Browser-Extension prototype](https://github.com/Nope-im-not-pro/Wireguard-Browser-Extension): a related Firefox/native-host design considered during exploration.
 
 No implementation has been copied from the prototype. Its public availability is not a substitute for confirming a source licence. Evaluate each component's maintenance, security, macOS support, and licence independently.

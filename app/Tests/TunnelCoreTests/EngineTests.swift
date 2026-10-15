@@ -46,7 +46,7 @@ final class EngineTests: XCTestCase {
         let config = try TunnelConfiguration("""
         [Interface]
         PrivateKey = \(clientKey.rawRepresentation.base64EncodedString())
-        Address = 192.0.2.2/32
+        Address = 192.0.2.2
         DNS = 192.0.2.1
         [Peer]
         PublicKey = \(serverKey.publicKey.rawRepresentation.base64EncodedString())
