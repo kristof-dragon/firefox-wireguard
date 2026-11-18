@@ -23,6 +23,20 @@ Evidence and coverage limits are in [validation.md](validation.md).
 - Retry Startup and independent integration repair recover a blocked second copy.
 - A started replacement refreshes an existing registration; updated helpers exit when their registration changes.
 
+## Linux development preview
+
+- Kubuntu 26.04 x86_64: Qt 6 tray/editor, KWallet/Secret Service, native Firefox registration and user-local installation.
+- Reuses the browser controller, native protocol and pinned wireproxy backend; browser labels now refer to the companion on either platform.
+- Linux UID checks, process supervision/parent-death signals, ownership/lease behavior, configuration validation and connection details.
+- Linux regression suite, Qt editor rendering, disposable wallet, real encrypted peers and disposable native Firefox checks.
+- See the [implementation plan and setup](linux-support.md). Snap/Flatpak, Linux arm64, interactive Plasma tray behavior, and public Linux binary redistribution audit remain follow-up validation.
+
+## Prepared in extension 0.2.2
+
+- Shared UI says “companion app”; the description covers macOS and Linux.
+- Same extension ID, protocol, permissions and controller as published 0.2.1, preserving existing installations and preferences.
+- Updated AMO listing/reviewer copy and an unsigned XPI for a new version of the existing listing; submission/signing/publication remain separate from merging source changes.
+
 ## Next: real server and browser coverage
 
 - Import a dedicated full-tunnel peer; verify Firefox's exit address while another app retains its original path.
@@ -35,7 +49,7 @@ Do not infer complete leak prevention from a public-IP page or existing automate
 
 ## Installation hardening
 
-- Submit the extension for Mozilla signing and public AMO listing.
+- Submit extension 0.2.2 to the existing public AMO listing for validation and signing.
 - Validate fresh installs, upgrades, removal, Intel, and declared minimum versions.
 - Add optional login startup; consider notarization and an installer for wider distribution.
 - Evaluate local SOCKS authentication if exclusive proxy access is needed.

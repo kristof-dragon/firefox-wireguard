@@ -1,5 +1,57 @@
 # Validation record
 
+## Linux development preview — 2026-11-18
+
+Checked on the Kubuntu 26.04 target machine (Ubuntu 26.04.1 x86_64 base), Python
+3.14.4, Qt/PyQt6 6.10.2, KDE KSecretD as the active Secret Service provider,
+native Firefox 160.0, geckodriver 0.37.1 and wireproxy 1.1.3. The existing macOS record below remains separate; Swift tests were not
+rerun on Linux.
+
+| Check | Evidence |
+| --- | --- |
+| Linux build | Pinned Linux/amd64 archive verified, relocatable Python/Qt companion built, unsigned shared XPI packaged |
+| Automated suites | 21 Linux tests and all 23 existing extension tests pass; optional backend and Secret Service tests enabled |
+| Configuration/storage | Strict full-tunnel policy, bare/prefixed addresses, IPv6 pairing, unsafe field rejection, private secret-free metadata, corruption/symlink rejection and failed-save rollback |
+| Desktop wallet | Disposable Secret Service item written, read, updated with a multiline synthetic configuration, and deleted; no real profile accessed |
+| Native protocol | Real bridge subprocess and private Unix socket exchange; origin, frame limits, foreign UID, stale registration, and startup ownership checks |
+| Quit/relaunch | Packaged app remains stopped on status/disconnect; explicit Connect launches it; app termination removes its socket |
+| Backend lifecycle | Killing the app parent or supervisor closes the real backend's SOCKS listener; stale browser lease and unhealthy metrics block the modeled connection |
+| Encrypted transport | HTTP crosses SOCKS and a real encrypted loopback WireGuard peer; failed destination does not fall back to the host; metrics redact private keys |
+| Real companion engine | Connect over the threaded control server survives handler exit, waits for a handshake, publishes counters, isolates browser ownership and disconnects cleanly |
+| Real Firefox | Disposable browser reaches both the isolated fixture host and actual packaged Qt companion/bridge with empty isolated app storage |
+| Firefox behavior | Failed connection blocks external-looking fixture requests, keeps localhost accessible, enables proxy DNS, disables WebRTC; kill-switch toggle and explicit disconnect restore/block as expected |
+| Qt editor | Offscreen test checks Cancel, failed Save preservation, Save before New, Discard and selection; synthetic details render without clipping in a visually inspected screenshot |
+| Installation | Isolated install, replacement and removal preserve metadata and register the expected helper; no real installation is changed by that test |
+
+Reproduce with `scripts/build.sh`,
+`FWG_TEST_BACKEND=1 FWG_TEST_SECRET_SERVICE=1 scripts/test.sh`, and
+`python3 scripts/backend_integration.py`. The real-bridge browser check launches
+the packaged Qt app with temporary XDG data/runtime directories and runs the
+existing Firefox smoke script in that environment. Build outputs and synthetic
+screenshots stay in ignored directories.
+
+Remaining Linux validation: interactive Plasma/Wayland tray and wallet-prompt
+UX, Snap/Flatpak Firefox, Linux arm64, other desktops, real remote-peer DNS/IPv6
+and the wider browser leak matrix below. The exit provider has no live remote
+test here. Public Linux binary redistribution needs its own dependency/licence
+audit. This preview does not claim complete browser or OS traffic containment.
+
+On 2026-11-18, the user imported a profile in the installed Kubuntu companion
+and reported successful Firefox connectivity, matching their macOS experience.
+The active published 0.2.1 extension was checked to have the same controller and
+protocol as this checkout. This records a manual success report, not a packet
+capture or a complete DNS/IPv6 leak test. Extension 0.2.2 changes only platform
+wording and release metadata; the installed signed 0.2.1 package is not modified
+in place.
+
+For the 0.2.2 source update, the 21 Linux and 23 extension tests passed again,
+with the lifecycle fixture's registration isolated from the live desktop
+installation. The live native-host manifest checksum was unchanged after the
+suite. Mozilla web-ext 10.8.0 reported zero errors, zero notices and the existing
+Android-only minimum-version warning; this add-on targets desktop Firefox.
+
+## macOS 0.2.1 record
+
 Native app 0.2.1 / extension 0.2.1, checked 2026-10-15 on Apple Silicon, macOS 27, Swift 6.4, Firefox 157.0.1, and wireproxy 1.1.3. This is a development milestone, not a complete traffic-containment certification.
 
 ## Passed

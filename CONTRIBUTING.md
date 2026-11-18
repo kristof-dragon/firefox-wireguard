@@ -15,7 +15,7 @@ Use relative paths and obvious placeholders in documentation. Use reserved examp
 
 ## Local data
 
-Keep runtime profiles and credentials in the app's per-user storage and macOS Keychain. For development-only material that must be near the checkout, use an ignored local-private directory and restrict its permissions. Ignoring a path is not protection for material already committed.
+Keep runtime profiles and credentials in the app's per-user storage and macOS Keychain or Linux Secret Service. For development-only material that must be near the checkout, use an ignored local-private directory and restrict its permissions. Ignoring a path is not protection for material already committed.
 
 The initial repository setup uses a project-only Git author and committer identity. Preserve that approach for project maintenance commits intended to contain no personal references. Review local Git settings before committing from another environment. Contributions to original project files are under MPL-2.0. Preserve licence notices and third-party attribution.
 

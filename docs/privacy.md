@@ -1,14 +1,14 @@
 # Privacy and data transmission
 
-Updated 2026-10-15. Applies to WireGuard for Firefox extension 0.2.1 and
-Firefox WireGuard macOS companion 0.2.1.
+Updated 2026-11-18. Applies to WireGuard for Firefox extensions 0.2.1 and 0.2.2,
+Firefox WireGuard macOS companion 0.2.1 and the Linux development companion.
 
 ## What leaves the browser
 
 When you choose **Connect**, Firefox sends covered browsing traffic through
 the local companion and your chosen WireGuard server. This includes destination
 domains and IP addresses and the requests and responses needed to load websites.
-The tunnel encrypts traffic between your Mac and that server. HTTPS remains
+The tunnel encrypts traffic between your computer and that server. HTTPS remains
 encrypted between Firefox and the destination website. The server operator can
 observe connection metadata and any traffic not separately protected by HTTPS.
 Choose a server you trust. This project does not operate a VPN service.
@@ -36,9 +36,10 @@ The service has its own [privacy policy](https://ipwhois.io/privacy) and
 project does not control that service's retention or availability. The country
 describes the exit IP, not GPS or a measurement of your physical location.
 
-## What stays on your Mac
+## What stays on your computer
 
-- Complete tunnel configurations are stored in macOS Keychain. Profile names
+- Complete tunnel configurations are stored in macOS Keychain or Linux Secret
+  Service (KWallet/KSecretD on Kubuntu). There is no plaintext fallback. Profile names
   and identifiers are stored in the companion's per-user application folder.
 - Firefox local extension storage retains a random client identifier, the
   selected profile identifier, desired connection state, and kill-switch choice.
@@ -50,7 +51,7 @@ describes the exit IP, not GPS or a measurement of your physical location.
 The project maintainers receive no automatic reports from the product. Your
 chosen server, DNS provider, websites, and the IP lookup provider process
 requests according to their own policies. Normal WireGuard endpoint resolution
-and encrypted tunnel transport use the Mac's ordinary network.
+and encrypted tunnel transport use the computer's ordinary network.
 
 ## Controls and limits
 
@@ -66,9 +67,10 @@ ordinary browsing during an outage. Localhost bypasses the tunnel. Disabling or
 removing the extension ends its enforcement. This is a browser proxy control,
 not an operating-system firewall; see [validation limits](validation.md).
 
-Delete profiles in the companion to remove their Keychain entries. Uninstalling
+Delete profiles in the companion to remove their Keychain or Secret Service entries. Uninstalling
 the extension removes its local extension storage. Deleting the companion alone
-does not delete saved Keychain entries; see [removal](installation.md#updates-and-removal).
+does not delete saved secrets; see [Mac removal](installation.md#updates-and-removal)
+or [Linux removal](linux-support.md#diagnostics-tests-and-removal).
 
 For questions, use the project's issue tracker linked from the add-on listing.
 Do not post keys, real configurations, private endpoints, or unredacted screenshots.

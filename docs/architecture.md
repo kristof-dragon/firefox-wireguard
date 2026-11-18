@@ -1,6 +1,14 @@
 # Architecture
 
-This describes native app 0.2.1 and extension 0.2.1. Validation scope is recorded separately in [validation.md](validation.md).
+This describes macOS app 0.2.1, the Linux companion and extensions 0.2.1/0.2.2. The extension's 0.2.2 update changes platform labels, not the controller or protocol. Validation scope is recorded separately in [validation.md](validation.md).
+
+The [Linux companion](linux-support.md) implements the same protocol and backend
+behavior in Python, with a Qt 6 tray/editor and Secret Service storage via
+libsecret (KWallet/KSecretD on Kubuntu 26.04). The extension controller is shared;
+its UI labels refer to the companion on either platform.
+Linux uses XDG data/runtime directories, `SO_PEERCRED` UID checks and kernel
+parent-death signals in addition to its backend supervisor. The SwiftUI and
+Keychain details below describe the macOS implementation.
 
 ## Native app and secrets
 

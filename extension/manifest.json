@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "WireGuard for Firefox",
-  "version": "0.2.1",
-  "description": "Select app-managed WireGuard profiles for Firefox browsing on macOS.",
+  "version": "0.2.2",
+  "description": "Select app-managed WireGuard profiles for Firefox browsing on macOS and Linux.",
   "browser_specific_settings": {
     "gecko": {
       "id": "firefox-wireguard@local.invalid",

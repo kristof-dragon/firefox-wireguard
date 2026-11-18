@@ -8,11 +8,13 @@ are generated in memory for this test and never printed or written to disk.
 import base64
 import http.server
 import os
+import platform
 from pathlib import Path
 import socket
 import struct
 import subprocess
 import threading
+import tempfile
 import time
 import urllib.request
 
@@ -20,6 +22,9 @@ root = Path(__file__).resolve().parents[1]
 contents = Path(os.environ.get("FWG_TEST_APP", root / "dist" / "Firefox WireGuard.app")) / "Contents"
 backend = contents / "Resources" / "wireproxy"
 supervisor = contents / "MacOS" / "firefox-wireguard-bridge"
+if platform.system() == "Linux":
+    bundle = Path(os.environ.get("FWG_TEST_APP", root / "dist/firefox-wireguard-linux"))
+    backend, supervisor = bundle / "wireproxy", bundle / "firefox-wireguard-bridge"
 if not backend.is_file() or not supervisor.is_file():
     raise SystemExit("Build the app with scripts/build.sh first.")
 
@@ -155,6 +160,53 @@ BindAddress = 127.0.0.1:{proxy_port}
         sock.settimeout(1)
         assert sock.connect_ex(("127.0.0.1", proxy_port)) != 0, "Orphan backend still listening"
     print("PASS: stopping the supervisor terminates its backend and closes the proxy.")
+    if platform.system() == "Linux":
+        # Exercise the actual Linux app runtime as well as its standalone
+        # supervisor. Memory-only vault; no desktop wallet/profile is touched.
+        import sys
+        import uuid
+        from unittest.mock import patch
+        sys.path.insert(0, str(root / "linux"))
+        from firefox_wireguard.runtime import Runtime
+        from firefox_wireguard.protocol import connect, frame, read_frame
+        import json
+        class MemoryVault:
+            def __init__(self):
+                self.values = {}
+            def read(self, key, timeout=60):
+                return self.values[key]
+            def write(self, key, value):
+                self.values[key] = value
+        with tempfile.TemporaryDirectory(prefix="fwg-engine-") as temporary:
+            directory = Path(temporary)
+            runtime = Runtime(supervisor, directory, MemoryVault(), directory / "control.sock", directory / "manifest.json")
+            try:
+                profile = runtime.save(None, "Local encrypted fixture", client_config.split("[Socks5]")[0])
+                owner, other = str(uuid.uuid4()), str(uuid.uuid4())
+                def command(name, client=owner):
+                    # Use the real server: connect is handled on a short-lived
+                    # thread. The supervisor must survive that thread's exit.
+                    with connect(directory / "control.sock") as control:
+                        control.sendall(frame(json.dumps({"version": 1, "id": "fixture", "command": name,
+                                                          "clientID": client, "profileID": profile["id"]}).encode()))
+                        return json.loads(read_frame(control.recv))
+                # Do not call an Internet IP provider from this local fixture.
+                with patch.object(runtime.tunnel, "_update_exit"):
+                    assert command("connect")["state"]["phase"] == "connecting"
+                    deadline = time.monotonic() + 15
+                    while command("status")["state"]["phase"] != "connected":
+                        assert time.monotonic() < deadline, "Linux runtime did not observe the handshake"
+                        time.sleep(0.2)
+                    state = command("status")["state"]
+                    assert state["details"]["downloadedBytes"] >= 0
+                    assert b"encrypted-wireguard-roundtrip" in through_proxy(state["proxyPort"], "192.0.2.1", 8080)
+                    assert command("status", other)["busy"] is True
+                    assert command("connect", other)["ok"] is False
+                    assert command("disconnect", other)["ok"] is False
+                    assert command("disconnect")["state"]["phase"] == "idle"
+                print("PASS: Linux runtime connects only after a handshake, exposes counters, isolates owners, and disconnects.")
+            finally:
+                runtime.close()
 finally:
     for proc in reversed(processes):
         if proc.poll() is None:

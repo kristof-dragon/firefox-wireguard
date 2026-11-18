@@ -2,13 +2,13 @@
 
 ## Accepted product scope
 
-- A native macOS app owns WireGuard profiles and connection state.
-- The app is accessed through the menu bar, without a Dock icon or Docker dependency.
+- A native macOS or Linux companion owns WireGuard profiles and connection state.
+- The app is accessed through the macOS menu bar or KDE Plasma system tray, without a Docker dependency. Kubuntu 26.04 x86_64 with native Firefox is the primary Linux target.
 - Profiles can be added, imported from supported WireGuard configuration files, edited, renamed, and removed.
 - The Firefox extension lists profiles configured in the app and selects one to connect.
 - The extension can request connection, disconnection, and current status.
 - The first version has one active browser tunnel at a time. Multiple stored profiles are supported.
-- Secrets remain in native storage, with private and preshared keys protected using macOS Keychain. Firefox receives profile identifiers and display names, not key material.
+- Secrets remain in native storage, with private and preshared keys protected using macOS Keychain or Linux Secret Service (KWallet/KSecretD). No plaintext fallback is permitted. Firefox receives profile identifiers and display names, not key material.
 - The app does not create system-wide VPN routes or change system DNS settings.
 - Neither the official WireGuard Mac app nor Docker is a prerequisite.
 

@@ -9,7 +9,7 @@ function render(state) {
   if (!state) return;
   const select = byID("profile"), selection = select.value || state.profileID;
   const options = state.profiles.map(profile => { const option = document.createElement("option"); option.value = profile.id; option.textContent = profile.name; return option; });
-  if (!options.length) { const option = document.createElement("option"); option.value = ""; option.textContent = "Add a profile in the Mac app"; options.push(option); }
+  if (!options.length) { const option = document.createElement("option"); option.value = ""; option.textContent = "Add a profile in the companion app"; options.push(option); }
   select.replaceChildren(...options);
   if (options.some(option => option.value === selection)) select.value = selection;
   byID("status").textContent = !state.desired ? "Normal browsing" : state.directFallback ? "Browsing directly" : ({connected: "Connected", connecting: "Waiting for handshake…", disconnecting: "Disconnecting…"}[state.phase] || "Browsing blocked");

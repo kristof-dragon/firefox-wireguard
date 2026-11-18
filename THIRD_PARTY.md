@@ -2,7 +2,7 @@
 
 ## wireproxy 1.1.3
 
-The local development build downloads an upstream macOS executable from the
+The local development build downloads an upstream macOS or Linux executable from the
 [v1.1.3 release](https://github.com/windtf/wireproxy/releases/tag/v1.1.3).
 The archive SHA-256 values are pinned in `scripts/fetch_backend.py`, checked
 before extraction, and matched to the release asset digests.
@@ -43,9 +43,22 @@ as required attribution. They are not project-user information. This review is
 specific to the pinned Darwin/arm64 build; dependency or architecture changes
 require a fresh review.
 
+### Linux development companion
+
+Linux development builds use the pinned upstream Linux/amd64 or Linux/arm64
+archive and retain `wireproxy-LICENSE` alongside the executable. These hashes
+were matched against the v1.1.3 release asset digests. The Linux binary has not
+received the Darwin/arm64 dependency and redistribution audit described above;
+do not reuse that audit as evidence for a public Linux binary release.
+
+The companion uses distribution-installed Python 3, PyQt6/Qt 6, libsecret-tools
+and curl; none is redistributed in the local build. Review the distribution
+obligations of these dependencies before publishing a Linux binary package.
+The original Linux sources are MPL-2.0.
+
 ## Original application and extension
 
-The Swift application, messaging bridge, and Firefox extension were written for
+The Swift and Python applications, messaging bridges, and Firefox extension were written for
 this project. No code from the related Wireguard-Browser-Extension prototype has
 been copied. The original project source, documentation, and assets are licensed under
 MPL-2.0; see LICENSE. This does not change the licences of wireproxy or its
