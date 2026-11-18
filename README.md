@@ -1,8 +1,10 @@
 # Firefox WireGuard
 
-A native macOS menu-bar app and Firefox extension that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
+A native companion for macOS and Linux, plus a Firefox extension, that send Firefox browsing through a selected WireGuard connection. No Docker, system VPN routes, or system DNS changes.
 
-## Native app 0.2.1 / extension 0.2.1
+Linux support targets **Kubuntu 26.04** with a Qt 6 tray app, KWallet/Secret Service storage, and native Firefox. It reuses the existing extension and wireproxy backend. Build with `scripts/build.sh`, then run `dist/firefox-wireguard-linux/install.py` without sudo. See the [Linux implementation plan, setup and limitations](docs/linux-support.md).
+
+## macOS app 0.2.1 / Linux preview / extension 0.2.2 source
 
 Both interfaces show the public exit IP and country flag, current-connection download/upload totals, tunnel DNS servers, and WireGuard client addresses. Firefox has a persistent **Kill switch**, on by default: detected failures block covered requests; switching it off permits normal browsing while the tunnel is unavailable. Direct browsing is clearly labelled.
 
@@ -12,19 +14,17 @@ An Apple Silicon preview is available as a ready-to-run Mac download. It include
 
 This project is open source under the [Mozilla Public License 2.0](LICENSE). The Firefox add-on is named **WireGuard for Firefox**; the native companion keeps its existing name and identifiers.
 
-Extension 0.2.1 was submitted for a public Mozilla Add-ons listing on 2026-10-15
-and is awaiting review. It is not yet an approved, signed public release.
-See the [submission record](docs/firefox-submission.md#submission-record).
+Extension **0.2.1 is available on [Mozilla Add-ons](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/)** and already works with either companion. Extension **0.2.2** in this checkout updates the platform labels and is prepared for submission to the same listing; it has not yet been uploaded. See the [publication record and update procedure](docs/firefox-submission.md).
 
 ## Try it
 
 1. [Download Firefox WireGuard 0.2.1 for Apple Silicon](https://github.com/kristof-dragon/firefox-wireguard/releases/download/v0.2.1/Firefox-WireGuard-0.2.1-macOS-arm64.zip), unzip it, and move **Firefox WireGuard.app** to **Applications**. No developer tools, Docker, or separate WireGuard installation are needed.
 2. Open the app. This preview is ad-hoc signed and **not notarized by Apple**. If macOS blocks it, follow the [first-launch instructions](docs/installation.md#download-the-mac-app). Its shield icon appears in the menu bar.
 3. Choose **Install Firefox Integration**, then **Manage Profiles…** to import a supported full-tunnel configuration.
-4. Temporarily load `extension/manifest.json` using Firefox's `about:debugging` page. Allow the extension in private windows.
+4. Install the [Firefox extension](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/), or keep your existing installation. Allow it in private windows. Developers can temporarily load `extension/manifest.json` to test the pending 0.2.2 labels.
 5. Close existing tabs and downloads, then select a profile and **Connect** in the extension.
 
-[Installation, supported configurations, updates, and removal](docs/installation.md) has the complete steps. The [GitHub release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1) includes checksums and matching source. The Firefox add-on is still awaiting Mozilla review; a downloaded Mac app does not replace the extension. Once approved, install it from the [Mozilla listing](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/).
+[Installation, supported configurations, updates, and removal](docs/installation.md) has the complete steps. The [GitHub Mac release](https://github.com/kristof-dragon/firefox-wireguard/releases/tag/v0.2.1) includes checksums and matching source. The companion and Firefox extension are installed separately. Linux installation is described in the [Linux guide](docs/linux-support.md).
 
 ## Behaviour
 
@@ -41,7 +41,7 @@ flowchart LR
     Proxy --> Tunnel[Userspace WireGuard connection]
     Tunnel --> Destination[Internet or remote private network]
     Extension[Firefox extension] --> Bridge[Native messaging bridge]
-    Bridge --> App[macOS menu-bar app]
+    Bridge --> App[macOS menu-bar or Linux tray app]
     App --> Tunnel
 ```
 
@@ -58,7 +58,9 @@ python3 scripts/backend_integration.py
 
 Opt-in tests use disposable Keychain entries and locally generated WireGuard peers. Local development downloads a checksum-verified wireproxy 1.1.3 binary. Public app releases rebuild the same version from verified source, remove build paths, and bundle reviewed third-party licences; see [Mac release packaging](docs/macos-releases.md). Build products, logs, and browser profiles are ignored by Git.
 
-Declared minimums are macOS 13 and Firefox 140. The build was tested on Apple Silicon with macOS 27 and Firefox 157. Intel backend download support is included, but an Intel build has not been tested.
+The build/test scripts select the host platform. On Linux, use `FWG_TEST_SECRET_SERVICE=1 FWG_TEST_BACKEND=1 scripts/test.sh` for disposable wallet and backend checks; Qt editor tests use the offscreen platform. No Swift toolchain is required on Linux.
+
+Declared minimums are macOS 13 and Firefox 140; the primary Linux target is Kubuntu 26.04 x86_64. The Mac build was tested on Apple Silicon with macOS 27 and Firefox 157. Intel Mac and Linux arm64 backend downloads are included, but those targets have not been tested.
 
 ## Project documents
 

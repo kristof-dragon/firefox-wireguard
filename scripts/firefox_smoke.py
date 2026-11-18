@@ -10,6 +10,7 @@ import argparse
 import http.server
 import json
 import os
+import platform
 import shutil
 from pathlib import Path
 import socket
@@ -23,12 +24,17 @@ import zipfile
 
 parser = argparse.ArgumentParser()
 parser.add_argument("geckodriver", type=Path)
-parser.add_argument("--firefox", default="/Applications/Firefox.app/Contents/MacOS/firefox")
+parser.add_argument("--firefox", default="/usr/bin/firefox" if platform.system() == "Linux" else "/Applications/Firefox.app/Contents/MacOS/firefox")
 parser.add_argument("--launch-services", action="store_true", help="Launch via macOS LaunchServices (needed for Firefox on macOS 27)")
 parser.add_argument("--fixture-native", action="store_true", help="Use a separate synthetic native host; leave the real app and integration untouched")
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 helper = root / "dist/Firefox WireGuard.app/Contents/MacOS/firefox-wireguard-bridge"
+if platform.system() == "Linux":
+    helper = root / "dist/firefox-wireguard-linux/firefox-wireguard-bridge"
+if args.launch_services and platform.system() != "Darwin":
+    parser.error("--launch-services is macOS-only")
+(root / ".build").mkdir(exist_ok=True)
 version = json.loads((root / "extension/manifest.json").read_text())["version"]
 extension = root / f"dist/firefox-wireguard-{version}-unsigned.xpi"
 extension_id = "firefox-wireguard@local.invalid"
@@ -54,6 +60,8 @@ if args.fixture_native:
             target.writestr(name, data)
     extension = fixture_extension
 manifest = Path.home() / f"Library/Application Support/Mozilla/NativeMessagingHosts/{host}.json"
+if platform.system() == "Linux":
+    manifest = Path.home() / f".mozilla/native-messaging-hosts/{host}.json"
 prior = manifest.read_bytes() if manifest.exists() else None
 prior_mode = manifest.stat().st_mode & 0o777 if manifest.exists() else None
 with socket.socket() as sock:

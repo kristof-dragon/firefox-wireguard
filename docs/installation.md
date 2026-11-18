@@ -1,6 +1,8 @@
 # Install and try the preview
 
-Current native app: 0.2.1. Firefox extension: 0.2.1. The native app version appears near the bottom of its menu-bar panel.
+Current downloadable macOS app: 0.2.1. Published Firefox extension: 0.2.1; this checkout prepares 0.2.2 with platform-neutral labels. Existing 0.2.1 installations work with both companions and need no reinstall. The macOS app version appears near the bottom of its menu-bar panel.
+
+For **Kubuntu 26.04 / Linux**, use the [Linux build, installation and removal guide](linux-support.md). The macOS-specific steps below do not apply to Linux; the profile format and Firefox behavior are shared.
 
 ## Download the Mac app
 
@@ -22,10 +24,10 @@ unverified.
    there is no Dock window to keep open. Relaunch it from Applications after Quit.
 
 The release includes **SHA256SUMS.txt** and matching source. The native app still
-requires the Firefox extension. Version 0.2.1 is awaiting Mozilla review; use the
-temporary development method below until the
-[Mozilla listing](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/)
-offers an approved installation. Building from source remains optional.
+requires the Firefox extension, available from the
+[Mozilla listing](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/).
+Use the temporary development method below only to test unreleased extension
+changes. Building the Mac companion from source remains optional.
 
 ## Build from source (optional)
 
@@ -40,7 +42,7 @@ scripts/build.sh
 This downloads checksum-verified wireproxy 1.1.3, builds the native programs, applies local ad-hoc signatures, and creates:
 
 - `dist/Firefox WireGuard.app`
-- `dist/firefox-wireguard-0.2.1-unsigned.xpi`
+- `dist/firefox-wireguard-0.2.2-unsigned.xpi`
 
 Set `FWG_OUTPUT_DIR` to build the app into a different folder without replacing an existing copy. The unsigned XPI still goes into `dist/`.
 
@@ -89,11 +91,11 @@ lookup. See [privacy.md](privacy.md).
 5. Open the extension from Firefox's extensions menu; pin it if desired.
 6. Close existing tabs and downloads. Choose a profile and **Connect**. A recent handshake and verified settings produce **Connected**.
 
-Localhost remains reachable. Other private IPs use the tunnel. WebRTC calling is disabled while protected. **Disconnect** restores underlying Firefox settings; **Stop Tunnel** in the Mac app blocks covered browsing when the Firefox kill switch is on; with it off, Firefox returns to normal browsing once it detects the stopped tunnel.
+Localhost remains reachable. Other private IPs use the tunnel. WebRTC calling is disabled while protected. **Disconnect** restores underlying Firefox settings; **Stop Tunnel** in the companion app blocks covered browsing when the Firefox kill switch is on; with it off, Firefox returns to normal browsing once it detects the stopped tunnel.
 
-If the list is empty, create a profile in the app and click **Refresh**. If the helper is unavailable, open the app and repair integration. If a Keychain prompt delayed a request, answer it and reconnect. Other proxy/privacy extensions or managed browser policies may prevent necessary settings from being applied.
+If the list is empty, create a profile in the companion and click **Refresh**. If the helper is unavailable, open the companion and repair integration. If a Keychain or KWallet prompt delayed a request, answer it and reconnect. Other proxy/privacy extensions or managed browser policies may prevent necessary settings from being applied.
 
-Temporary add-ons disappear on Firefox restart. The unsigned XPI cannot be permanently installed in standard release Firefox. The public 0.2.1 submission is awaiting Mozilla review; see the [submission record](firefox-submission.md). Mozilla also supports signed, unlisted self-distribution. See Mozilla's [temporary installation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) and [signing and distribution](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) instructions.
+Temporary add-ons disappear on Firefox restart. The unsigned XPI cannot be permanently installed in standard release Firefox. For everyday use, keep or install the signed [published extension](https://addons.mozilla.org/firefox/addon/wireguard-for-firefox/). The 0.2.2 source update must be uploaded to that existing listing for validation/signing; see the [publication procedure](firefox-submission.md). Mozilla also supports signed, unlisted self-distribution. See Mozilla's [temporary installation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) and [signing and distribution](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) instructions.
 
 ## Kill switch
 
@@ -101,18 +103,18 @@ The **Kill switch** in the Firefox popup is on by default and its choice is save
 
 When off, Firefox restores its underlying proxy/privacy settings and permits normal browsing while the tunnel is unavailable. The popup shows **Browsing directly**, an explicit warning, and an **OFF** badge. A recovered healthy tunnel resumes proxying. If settings cannot be restored, requests stay blocked. Failed individual proxy requests do not have a direct fallback; the transition occurs after the extension detects an unavailable connection.
 
-This is a Firefox extension control, not a Mac firewall. Detection uses the existing health/lease intervals. Existing sockets and browser-internal traffic remain validation limits; disabling or removing the extension ends its enforcement.
+This is a Firefox extension control, not an operating-system firewall. Detection uses the existing health/lease intervals. Existing sockets and browser-internal traffic remain validation limits; disabling or removing the extension ends its enforcement.
 
 ## Connection details
 
-The Mac menu and Firefox popup share the same in-memory connection information:
+The companion and Firefox popup share the same in-memory connection information:
 
 - **Public IP** and country flag: an HTTPS check through the selected SOCKS/WireGuard tunnel, after a handshake and every five minutes. The fixed provider is [ipwho.is](https://ipwhois.io/documentation). Its hostname is resolved through SOCKS, with no direct lookup fallback. The provider sees the exit IP and ordinary HTTPS request metadata; no keys, profile names, client addresses, or configured DNS addresses are sent. Country is approximate geolocation. Failure shows **Unavailable** without blocking an otherwise healthy tunnel.
 - **Downloaded / Uploaded**: WireGuard receive/transmit byte counters for this connection, refreshed approximately every two seconds. Totals reset on reconnect or profile change. They include the exit-IP check and other tunnel traffic, and exclude localhost bypass traffic; they are not just webpage payload sizes.
 - **Tunnel DNS**: the DNS server IPs configured for the active connection. This is not a resolver measurement or a DNS-over-HTTPS/leak test.
 - **WireGuard IP**: the client's configured tunnel addresses, without routing prefixes. IPv4 and IPv6 addresses are listed when configured.
 
-Details are not written to disk or extension storage. Old lookup results cannot carry over to a new connection. Firefox clears the card when the connection is unavailable; the Mac retains configured addresses and any last valid totals until the session stops. Tooltips explain each field. Older companions remain compatible but cannot supply the new display.
+Details are not written to disk or extension storage. Old lookup results cannot carry over to a new connection. Firefox clears the card when the connection is unavailable; the companion retains configured addresses and any last valid totals until the session stops. Older companions remain compatible but cannot supply the new display.
 
 ## Updates and removal
 

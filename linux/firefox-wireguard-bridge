@@ -1,0 +1,9 @@
+#!/usr/bin/python3 -I
+# SPDX-License-Identifier: MPL-2.0
+import sys
+from pathlib import Path
+sys.dont_write_bytecode = True
+helper = Path(__file__).resolve()
+sys.path.insert(0, str(helper.parent))
+from firefox_wireguard.bridge import main
+sys.exit(main(helper))

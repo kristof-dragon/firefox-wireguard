@@ -11,16 +11,19 @@ import urllib.request
 
 VERSION = "1.1.3"
 SHA256 = {
-    "arm64": "28d34342c48c309b628d9c06ab4efc05b82fba49821f360605c02139c02547a5",
-    "x86_64": "5d89742a0f381d9508d3ad828a0d300dceee24fa49015427eaff42a23f7a50bd",
+    ("Darwin", "arm64"): "28d34342c48c309b628d9c06ab4efc05b82fba49821f360605c02139c02547a5",
+    ("Darwin", "amd64"): "5d89742a0f381d9508d3ad828a0d300dceee24fa49015427eaff42a23f7a50bd",
+    ("Linux", "amd64"): "e88c1d090740373fc606c1bafd81d9a5eadc642cce5667616e20e9d7a444f51c",
+    ("Linux", "arm64"): "370e00bd2167960d1ecd1c3c1439715bbaa94a0a110a2040468670c9af6021b6",
 }
 root = Path(__file__).resolve().parents[1]
 cache = root / "vendor" / "bin"
 cache.mkdir(parents=True, exist_ok=True)
-arch = platform.machine()
-if platform.system() != "Darwin" or arch not in SHA256:
-    raise SystemExit("This build requires an Apple Silicon or Intel Mac.")
-asset = f"wireproxy_darwin_{'amd64' if arch == 'x86_64' else arch}.tar.gz"
+arch = {"x86_64": "amd64", "aarch64": "arm64"}.get(platform.machine(), platform.machine())
+system = platform.system()
+if (system, arch) not in SHA256:
+    raise SystemExit("Supported backend targets: macOS and Linux, x86_64 or arm64.")
+asset = f"wireproxy_{system.lower()}_{arch}.tar.gz"
 archive = cache / f"v{VERSION}-{asset}"
 if not archive.exists():
     url = f"https://github.com/windtf/wireproxy/releases/download/v{VERSION}/{asset}"
@@ -30,7 +33,7 @@ if not archive.exists():
         raise SystemExit("Backend archive exceeds the permitted size.")
 else:
     data = archive.read_bytes()
-if hashlib.sha256(data).hexdigest() != SHA256[arch]:
+if hashlib.sha256(data).hexdigest() != SHA256[system, arch]:
     raise SystemExit("Backend checksum mismatch. Refusing to extract or execute it.")
 archive.write_bytes(data)
 with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as package:
@@ -53,4 +56,4 @@ else:
 if hashlib.sha256(licence_data).hexdigest() != "12e05cf70e2876d0cfd1c649e1c0032f82a370b365dcccd7d5a03feee17f2625":
     raise SystemExit("Backend licence checksum mismatch.")
 licence.write_bytes(licence_data)
-print(f"Verified wireproxy {VERSION} for {arch}.")
+print(f"Verified wireproxy {VERSION} for {system}/{arch}.")

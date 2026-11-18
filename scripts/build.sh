@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 set -euo pipefail
 cd "$(dirname "$0")/.."
+if [[ "$(uname -s)" == "Linux" ]]; then
+    exec python3 scripts/build_linux.py
+fi
 export CLANG_MODULE_CACHE_PATH="$PWD/.build/module-cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$CLANG_MODULE_CACHE_PATH"
 backend_dir="${FWG_BACKEND_DIR:-$PWD/vendor/bin}"
